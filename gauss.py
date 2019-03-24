@@ -5,6 +5,7 @@ Gauss method of preliminary orbit determination
 import argparse as ap
 import numpy as np
 from astropy.table import Table
+from astropy import units as u
 from astropy.coordinates import Latitude, Longitude
 
 G = 6.6740831e-11     # SI units
@@ -60,9 +61,9 @@ def parseInput(args):
 	ephem : astropy Table object
 	    Table of ephemeris data
 	phi : astropy Latitude object
-	    Latitude of observer
+	    Latitude of observer [deg]
 	h : float
-	    Altitude of observer
+	    Altitude of observer [m]
 	"""
 	# load ephemeris data
 	try:
@@ -82,15 +83,15 @@ def parseInput(args):
 
 def positionVector(phi, lst, h):
 	"""
-	Determine the position vector of an observer at a given time
+	Position vector of an observer at a given time
 	
 	Parameters
 	----------
 	phi : float
 	    Geodetic latitude of observer's location - angle between
-	    the equatorial and normal planes
+	    the equatorial and normal planes [rad]
 	lst : float
-	    Local sidereal time for observation [deg]
+	    Local sidereal time for observation [rad]
 	h : float
 	    Altitude of observer [m]
 	
@@ -99,13 +100,33 @@ def positionVector(phi, lst, h):
 	r : array-like
 	    Position vector of observer for given time
 	"""
-	r_x = (R_EARTH / np.sqrt(1 - (2*F - F**2)*np.sin(phi)**2) + h)*np.cos(phi)*np.cos(lst)
-	r_y = (R_EARTH / np.sqrt(1 - (2*F - F**2)*np.sin(phi)**2) + h)*np.cos(phi)*np.sin(lst)
-	r_z = (R_EARTH*(1 - F)**2 / np.sqrt(1 - (2*F - F**2)*np.sin(phi)**2) + h)*np.sin(phi)
+	r_x = (R_EARTH / np.sqrt(1 - (2*F - F**2)*np.sin(phi)**2) + h) \
+	      *np.cos(phi)*np.cos(lst)
+	r_y = (R_EARTH / np.sqrt(1 - (2*F - F**2)*np.sin(phi)**2) + h) \
+	      *np.cos(phi)*np.sin(lst)
+	r_z = (R_EARTH*(1 - F)**2 / np.sqrt(1 - (2*F - F**2)*np.sin(phi)**2) + h) \
+	      *np.sin(phi)
 	
 	return np.array([r_x, r_y, r_z])
 
+def cosineVector(alpha, delta):
+	"""
+	Direction cosine vector for an orbiting body
+	
+	Parameters
+	----------
+	alpha, delta : float
+	    Topocentric right ascension & declination [rad]
+	"""
+	rho_hat_x = np.cos(delta)*np.cos(alpha)
+	rho_hat_y = np.cos(delta)*np.sin(alpha)
+	rho_hat_z = np.sin(delta)
+	
+	return np.array([rho_hat_x, rho_hat_y, rho_hat_z])
+
 if __name__ == "__main__":
 	
-	r = positionVector(40, 44.506, 1000)
-	print(r)
+	alpha = Longitude(43.537, u.deg)
+	delta = Latitude(-8.7833, u.deg)
+	rho_hat = cosineVector(alpha.rad, delta.rad)
+	print(rho_hat)
