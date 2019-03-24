@@ -58,28 +58,64 @@ def parseInput(args):
 	
 	Returns
 	-------
-	ephem : astropy Table object
+	ephem_tab : astropy Table object
 	    Table of ephemeris data
-	phi : astropy Latitude object
-	    Latitude of observer [deg]
-	h : float
+	latitude : astropy Latitude object
+	    Latitude of observer
+	altitude : float
 	    Altitude of observer [m]
 	"""
 	# load ephemeris data
 	try:
-		ephem = Table.read(args.ephem_path, format='csv')
+		ephem_tab = Table.read(args.ephem_path, format='csv')
 	except FileNotFoundError:
 		print('No ephemeris file found...')
 		quit()
 	
-	# parse config info
+	# parse location config info
 	try:
-		loc = Table.read(args.loc_path, format='csv')
+		loc_tab = Table.read(args.loc_path, format='csv')
 	except FileNotFoundError:
 		print('No location config file found...')
 		quit()
 	
-	return ephem, Latitude(loc['latitude'], u.deg), loc['altitude']
+	latitude = Latitude(loc_tab['latitude'], u.deg)
+	altitude = loc_tab['altitude']
+	
+	return ephem_tab, latitude, altitude
+
+def selectObs(ephem_tab, n1=None, n2=None, n3=None):
+	"""
+	Select the desired three observations to use in the analysis
+	
+	Parameters
+	----------
+	ephem_tab : astropy Table object
+	    Table of ephemeris data
+	n1, n2, n3 : int, optional
+	    Indices specifying desired observations to use - if not given,
+	    start-middle-end will be used
+	    Default = None
+	
+	Returns
+	-------
+	obs1, obs2, obs3 : astropy Table objects
+	    Three observations to take forward, updated with correct format
+	"""
+	if not n1 < n2 < n3:
+		print('Observation indices must be in ascending order...')
+		quit()
+	
+	if n1 is None or n2 is None or n3 is None:
+		n1 = 0
+		n3 = len(ephem) - 1
+		n2 = round((n3 - n1) / 2)
+	
+	obs1 = ephem_tab[n1]
+	obs2 = ephem_tab[n2]
+	obs3 = ephem_tab[n3]
+	
+	return obs1, obs2, obs3
 
 def positionVector(phi, lst, h):
 	"""
@@ -126,7 +162,8 @@ def cosineVector(alpha, delta):
 
 if __name__ == "__main__":
 	
-	alpha = Longitude(43.537, u.deg)
-	delta = Latitude(-8.7833, u.deg)
-	rho_hat = cosineVector(alpha.rad, delta.rad)
-	print(rho_hat)
+	args = argParse()
+	
+	ephem, phi, h = parseInput(args) # from user input
+	
+	# select 
