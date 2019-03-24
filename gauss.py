@@ -206,13 +206,33 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	                             n1=obs_idx[0],
 	                             n2=obs_idx[1],
 	                             n3=obs_idx[2])
-	
 	obs1 = Observation(obs1)
 	obs2 = Observation(obs2)
 	obs3 = Observation(obs3)
 	
-	print(obs1.utc.second)
-	print(obs2.dec.deg)
+	# position and cosine vectors
+	## TODO: get lst from frame headers
+	## for now use example from Curtis textbook
+	r_1 = np.array([3489.8, 3430.2, 4078.5])
+	r_2 = np.array([3460.1, 3460.1, 4078.5])
+	r_3 = np.array([3429.9, 3490.1, 4078.5])
+	
+	rho_hat_1 = np.array([0.71643, 0.68074, -0.15270])
+	rho_hat_2 = np.array([0.56897, 0.79531, -0.20917])
+	rho_hat_3 = np.array([0.41841, 0.87007, -0.26059])
+	
+	# step 1 - time intervals
+	tau_1 = -118.10
+	tau_2 = 119.47
+	tau_3 = 237.58
+	
+	# step 2 - rho_hat cross products
+	p_1 = np.cross(rho_hat_2, rho_hat_3)
+	p_2 = np.cross(rho_hat_1, rho_hat_3)
+	p_3 = np.cross(rho_hat_1, rho_hat_2)
+	
+	#step 3 - rho_hat scalar triple product
+	
 	
 	return np.array([])
 
