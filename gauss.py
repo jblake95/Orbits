@@ -231,8 +231,24 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	p_2 = np.cross(rho_hat_1, rho_hat_3)
 	p_3 = np.cross(rho_hat_1, rho_hat_2)
 	
-	#step 3 - rho_hat scalar triple product
+	# step 3 - rho_hat scalar triple product
+	d_0 = np.dot(rho_hat_1, p_1)
 	
+	# step 4 - compute scalar quantities
+	d_11 = np.dot(r_1, p_1)
+	d_12 = np.dot(r_1, p_2)
+	d_13 = np.dot(r_1, p_3)
+	d_21 = np.dot(r_2, p_1)
+	d_22 = np.dot(r_2, p_2)
+	d_23 = np.dot(r_2, p_3)
+	d_31 = np.dot(r_3, p_1)
+	d_32 = np.dot(r_3, p_2)
+	d_33 = np.dot(r_3, p_3)
+	
+	# step 5 - calculate scalar position coefficients
+	A = (1 / d_0)*(-d_12*tau_3 / tau + d_22 + d_32*tau_1 / tau)
+	B = (1 / (6*d_0))*(d_12*(tau_3**2 - tau**2)*tau_3 / tau +
+	                   d_32*(tau**2 - tau_1**2)*tau_1 / tau)
 	
 	return np.array([])
 
