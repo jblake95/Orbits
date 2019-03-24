@@ -19,6 +19,21 @@ try:
 except NameError:
     FileNotFoundError = IOError
 
+class Observation:
+	"""
+	Observation of an orbiting body at a given time
+	"""
+	def __init__(self, obs_tab):
+		"""
+		Initiate Observation object
+		"""
+		self.ra = Longitude(obs_tab['ra'], u.deg)
+		self.dec = Latitude(obs_tab['dec'], u.deg)
+		self.raerr = Longitude(obs_tab['raerr'], u.deg)
+		self.decerr = Latitude(obs_tab['decerr'], u.deg)
+		self.utc = datetime.strptime(obs_tab['utc'], 
+		                             '%Y-%m-%dT%H:%M:%S.%f')
+
 def argParse():
     """
     Argument parser settings
@@ -102,15 +117,15 @@ def selectObs(ephem_tab, n1=None, n2=None, n3=None):
 	-------
 	obs1, obs2, obs3 : astropy Table objects
 	    Three observations to take forward, updated with correct format
-	"""
-	if not n1 < n2 < n3:
-		print('Observation indices must be in ascending order...')
-		quit()
-	
+	"""	
 	if n1 is None or n2 is None or n3 is None:
 		n1 = 0
-		n3 = len(ephem) - 1
+		n3 = len(ephem_tab) - 1
 		n2 = round((n3 - n1) / 2)
+	else:
+		if not n1 < n2 < n3:
+			print('Observation indices must be in ascending order...')
+			quit()
 	
 	obs1 = ephem_tab[n1]
 	obs2 = ephem_tab[n2]
@@ -166,7 +181,7 @@ def cosineVector(alpha, delta):
 	
 	return np.array([rho_hat_x, rho_hat_y, rho_hat_z])
 
-def performAlgorithm(args, obs_idx=None):
+def performAlgorithm(args, obs_idx=[None, None, None]):
 	"""
 	Carry out the Gauss method of preliminary orbit determination
 	
@@ -187,17 +202,24 @@ def performAlgorithm(args, obs_idx=None):
 	ephem, phi, h = parseInput(args) # from user input
 	
 	# select which observations to use
+	obs1, obs2, obs3 = selectObs(ephem,
+	                             n1=obs_idx[0],
+	                             n2=obs_idx[1],
+	                             n3=obs_idx[2])
 	
+	obs1 = Observation(obs1)
+	obs2 = Observation(obs2)
+	obs3 = Observation(obs3)
 	
-	return np.array([,,])
+	print(obs1.utc.second)
+	print(obs2.dec.deg)
+	
+	return np.array([])
 
 if __name__ == "__main__":
 	
 	args = argParse()
 	
-	ephem, phi, h = parseInput(args) # from user input
-	
-	# select observations to use 
-	obs1, obs2, obs3 = selectObs(ephem) # default = start-middle-end
+	vel = performAlgorithm(args)
 	
 	
