@@ -4,11 +4,20 @@ Gauss method of preliminary orbit determination
 
 import argparse as ap
 import numpy as np
+from astropy.table import Table
+from astropy.coordinates import Latitude, Longitude
 
-G = 6.6740831e-11 # SI units
+G = 6.6740831e-11     # SI units
 M_EARTH = 5.9722e+24  # Mass of Earth [kg]
 R_EARTH = 6378000.0   # Radius of Earth [m]
-F = 0.003353      # flattening for Earth
+F = 0.003353          # flattening for Earth
+
+DEG_TO_RAD = np.pi / 180.
+
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
 
 def argParse():
     """
@@ -29,8 +38,8 @@ def argParse():
                         help='path to file containing ephemeris info',
                         type=str)
     
-    parser.add_argument('config_path',
-                        help='path to  file',
+    parser.add_argument('loc_path',
+                        help='path to location config file',
                         type=str)
     
     parser.add_argument('--diagnostics',
@@ -38,6 +47,40 @@ def argParse():
                         action='store_true')
     
     return parser.parse_args()
+
+def parseInput(args):
+	"""
+	Obtain necessary data/ info from user input
+	
+	Parameters
+	----------
+	args : argParse output
+	    Arguments provided by user
+	
+	Returns
+	-------
+	ephem : astropy Table object
+	    Table of ephemeris data
+	loc : astropy Table object
+	    Table containing observer location info
+	"""
+	# load ephemeris data
+	try:
+		ephem = Table.read(args.ephem_path, format='csv')
+	except FileNotFoundError:
+		print('No ephemeris file found...')
+		quit()
+	
+	# parse config info
+	try:
+		loc = Table.read(args.loc_path, format='csv')
+	except FileNotFoundError:
+		print('No location config file found...')
+		quit()
+	
+	loc['latitude'] *= DEG_TO_RAD
+	
+	return ephem, loc
 
 def positionVector(phi, lst, h):
 	"""
