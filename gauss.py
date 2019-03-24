@@ -4,6 +4,7 @@ Gauss method of preliminary orbit determination
 
 import argparse as ap
 import numpy as np
+from datetime import datetime, timedelta
 from astropy.table import Table
 from astropy import units as u
 from astropy.coordinates import Latitude, Longitude
@@ -153,6 +154,11 @@ def cosineVector(alpha, delta):
 	----------
 	alpha, delta : float
 	    Topocentric right ascension & declination [rad]
+	
+	Returns
+	-------
+	rho_hat : array-like
+	    Direction cosine vector for the orbiting body
 	"""
 	rho_hat_x = np.cos(delta)*np.cos(alpha)
 	rho_hat_y = np.cos(delta)*np.sin(alpha)
@@ -160,10 +166,38 @@ def cosineVector(alpha, delta):
 	
 	return np.array([rho_hat_x, rho_hat_y, rho_hat_z])
 
+def performAlgorithm(args, obs_idx=None):
+	"""
+	Carry out the Gauss method of preliminary orbit determination
+	
+	Parameters
+	----------
+	args : argParse output
+	    Arguments provided by user 
+	obs_idx : array-like, optional
+	    Indices corresponding to observations to feed into algorithm
+	    (format: [n1, n2, n3] where ni specifies index i)
+	    default = None, will automatically select start-middle-end
+	
+	Returns
+	-------
+	vel_vec : array-like
+	    Velocity vectors for the three observations
+	"""
+	ephem, phi, h = parseInput(args) # from user input
+	
+	# select which observations to use
+	
+	
+	return np.array([,,])
+
 if __name__ == "__main__":
 	
 	args = argParse()
 	
 	ephem, phi, h = parseInput(args) # from user input
 	
-	# select 
+	# select observations to use 
+	obs1, obs2, obs3 = selectObs(ephem) # default = start-middle-end
+	
+	
