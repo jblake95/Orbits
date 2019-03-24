@@ -12,8 +12,6 @@ M_EARTH = 5.9722e+24  # Mass of Earth [kg]
 R_EARTH = 6378000.0   # Radius of Earth [m]
 F = 0.003353          # flattening for Earth
 
-DEG_TO_RAD = np.pi / 180.
-
 try:
     FileNotFoundError
 except NameError:
@@ -61,8 +59,10 @@ def parseInput(args):
 	-------
 	ephem : astropy Table object
 	    Table of ephemeris data
-	loc : astropy Table object
-	    Table containing observer location info
+	phi : astropy Latitude object
+	    Latitude of observer
+	h : float
+	    Altitude of observer
 	"""
 	# load ephemeris data
 	try:
@@ -78,9 +78,7 @@ def parseInput(args):
 		print('No location config file found...')
 		quit()
 	
-	loc['latitude'] *= DEG_TO_RAD
-	
-	return ephem, loc
+	return ephem, Latitude(loc['latitude'], u.deg), loc['altitude']
 
 def positionVector(phi, lst, h):
 	"""
