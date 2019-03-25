@@ -11,8 +11,9 @@ from astropy.coordinates import Latitude, Longitude
 
 G = 6.6740831e-11     # SI units
 M_EARTH = 5.9722e+24  # Mass of Earth [kg]
-R_EARTH = 6378000.0   # Radius of Earth [m]
+R_EARTH = 6378000.    # Radius of Earth [m]
 F = 0.003353          # flattening for Earth
+MU = 398600.          # gravitational parameter [km^3/s^2]
 
 try:
     FileNotFoundError
@@ -223,8 +224,8 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	
 	# step 1 - time intervals
 	tau_1 = -118.10
-	tau_2 = 119.47
-	tau_3 = 237.58
+	tau_3 = 119.47
+	tau = 237.58
 	
 	# step 2 - rho_hat cross products
 	p_1 = np.cross(rho_hat_2, rho_hat_3)
@@ -246,9 +247,20 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	d_33 = np.dot(r_3, p_3)
 	
 	# step 5 - calculate scalar position coefficients
-	A = (1 / d_0)*(-d_12*tau_3 / tau + d_22 + d_32*tau_1 / tau)
+	A = (1 / d_0)*(-d_12*(tau_3 / tau) + d_22 + d_32*(tau_1 / tau))
 	B = (1 / (6*d_0))*(d_12*(tau_3**2 - tau**2)*tau_3 / tau +
 	                   d_32*(tau**2 - tau_1**2)*tau_1 / tau)
+	E = np.dot(r_2, rho_hat_2)
+	
+	# step 6 - squared scalar distance of obs2
+	r2_2 = np.dot(r_2, r_2)
+	
+	# step 7 - coefficients for scalar distance polynomial
+	a = -(A**2 + 2*A*E + r2_2)
+	b = -2*MU*B*(A + E)
+	c = -(MU**2)*(B**2)
+	
+	print(a, b, c, MU)
 	
 	return np.array([])
 
