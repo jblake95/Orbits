@@ -256,7 +256,33 @@ def poly8prime(x, a, b, c):
 	"""
 	return 8*x**7 + 6*a*x**5 + 3*b*x**2
 
-def performAlgorithm(args, obs_idx=[None, None, None]):
+def orbElementsAlgorithm(r, v):
+	"""
+	Obtain the orbital elements from the state vector
+	
+	Parameters
+	----------
+	r : array-like
+	    Position vector for the orbiting body
+	v : array-like
+	    Velocity vector for the orbiting body
+	
+	Returns
+	-------
+	orb_elements : array-like
+	    Orbital elements for the orbiting body in following order
+	    i     - inclination
+	    e     - eccentricity
+	    Omega - right ascension of the ascending node
+	    omega - argument of perigree
+	    theta - true anomaly
+	    a     - semimajor axis    
+	"""
+	
+	
+	return orb_elements
+
+def gaussAlgorithm(args, obs_idx=[None, None, None]):
 	"""
 	Carry out the Gauss method of preliminary orbit determination
 	
@@ -289,7 +315,7 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	
 	# position and cosine vectors
 	## TODO: get lst from frame headers
-	## for now use example from Curtis textbook
+	## for now use example from Curtis textbook, algorithm 5.5
 	R_1 = np.array([3489.8, 3430.2, 4078.5])
 	R_2 = np.array([3460.1, 3460.1, 4078.5])
 	R_3 = np.array([3429.9, 3490.1, 4078.5])
@@ -406,13 +432,18 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	v_2 = (1 / (f_1*g_3 - f_3*g_1))*(-f_3*r_1 + f_1*r_3)
 	
 	# step 13 - orbital elements
+	## using example in Curtis textbook for testing, algorithm 4.2
+	r_2 = (-6045, -3490, 2500)
+	v_2 = (-3.457, 6.618, 2.533)
 	
-	return np.array([])
+	orb_elements = orbElementsAlgorithm(r_2, v_2)
+	
+	return orb_elements
 
 if __name__ == "__main__":
 	
 	args = argParse()
 	
-	orb_elements = performAlgorithm(args)
+	orb_elements = gaussAlgorithm(args)
 	
 	
