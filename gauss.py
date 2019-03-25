@@ -5,9 +5,11 @@ Gauss method of preliminary orbit determination
 import argparse as ap
 import numpy as np
 from datetime import datetime, timedelta
+from scipy.optimize import newton
 from astropy.table import Table
 from astropy import units as u
 from astropy.coordinates import Latitude, Longitude
+import matplotlib.pyplot as plt
 
 G = 6.6740831e-11     # SI units
 M_EARTH = 5.9722e+24  # Mass of Earth [kg]
@@ -182,6 +184,42 @@ def cosineVector(alpha, delta):
 	
 	return np.array([rho_hat_x, rho_hat_y, rho_hat_z])
 
+def poly8(x, a, b, c):
+	"""
+	Form of the eighth degree polynomial for use in algorithm 
+	
+	Parameters
+	----------
+	x : float
+	    Input value
+	a, b, c : float
+	    Polynomial coefficients
+	
+	Returns
+	-------
+	y : float
+	    Output value
+	"""
+	return x**8 + a*x**6 + b*x**3 + c
+
+def poly8prime(x, a, b, c):
+	"""
+	Derivative of the eight degree polynomial for use in algorithm
+	
+	Parameters
+	----------
+	x : float
+	    Input value
+	a, b, c : float
+	    Polynomial coefficients
+	
+	Returns
+	-------
+	y : float
+	    Output value
+	"""
+	return 8*x**7 + 6*a*x**5 + 3*b*x**2
+
 def performAlgorithm(args, obs_idx=[None, None, None]):
 	"""
 	Carry out the Gauss method of preliminary orbit determination
@@ -260,7 +298,10 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	b = -2*MU*B*(A + E)
 	c = -(MU**2)*(B**2)
 	
-	print(a, b, c, MU)
+	# step 8 - find zero of eight degree polynomial
+	i = np.arange(1, 10000, 1)
+	plt.plot(i, poly8(i, a, b, c))
+	plt.show()
 	
 	return np.array([])
 
