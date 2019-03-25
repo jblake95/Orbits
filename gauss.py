@@ -396,7 +396,13 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	r_2 = R_2 + rho_2*rho_hat_2
 	r_3 = R_3 + rho_3*rho_hat_3
 	
-	print(r_1, r_2, r_3)
+	# step 11 - Lagrange coefficients
+	f_1 = 1 - (1 / 2)*(MU / zero**3)*tau_1**2
+	f_3 = 1 - (1 / 2)*(MU / zero**3)*tau_3**2
+	g_1 = tau_1 - (1 / 6)*(MU / zero**3)*tau_1**3
+	g_3 = tau_3 - (1 / 6)*(MU / zero**3)*tau_3**3
+	
+	# step 12 - 
 	
 	return np.array([])
 
