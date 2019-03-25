@@ -290,9 +290,9 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	# position and cosine vectors
 	## TODO: get lst from frame headers
 	## for now use example from Curtis textbook
-	r_1 = np.array([3489.8, 3430.2, 4078.5])
-	r_2 = np.array([3460.1, 3460.1, 4078.5])
-	r_3 = np.array([3429.9, 3490.1, 4078.5])
+	R_1 = np.array([3489.8, 3430.2, 4078.5])
+	R_2 = np.array([3460.1, 3460.1, 4078.5])
+	R_3 = np.array([3429.9, 3490.1, 4078.5])
 	
 	rho_hat_1 = np.array([0.71643, 0.68074, -0.15270])
 	rho_hat_2 = np.array([0.56897, 0.79531, -0.20917])
@@ -312,31 +312,31 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	d_0 = np.dot(rho_hat_1, p_1)
 	
 	# step 4 - compute scalar quantities
-	d_11 = np.dot(r_1, p_1)
-	d_12 = np.dot(r_1, p_2)
-	d_13 = np.dot(r_1, p_3)
-	d_21 = np.dot(r_2, p_1)
-	d_22 = np.dot(r_2, p_2)
-	d_23 = np.dot(r_2, p_3)
-	d_31 = np.dot(r_3, p_1)
-	d_32 = np.dot(r_3, p_2)
-	d_33 = np.dot(r_3, p_3)
+	d_11 = np.dot(R_1, p_1)
+	d_12 = np.dot(R_1, p_2)
+	d_13 = np.dot(R_1, p_3)
+	d_21 = np.dot(R_2, p_1)
+	d_22 = np.dot(R_2, p_2)
+	d_23 = np.dot(R_2, p_3)
+	d_31 = np.dot(R_3, p_1)
+	d_32 = np.dot(R_3, p_2)
+	d_33 = np.dot(R_3, p_3)
 	
 	# step 5 - calculate scalar position coefficients
 	A = (1 / d_0)*(-d_12*(tau_3 / tau) + d_22 + d_32*(tau_1 / tau))
 	B = (1 / (6*d_0))*(d_12*(tau_3**2 - tau**2)*tau_3 / tau +
 	                   d_32*(tau**2 - tau_1**2)*tau_1 / tau)
-	E = np.dot(r_2, rho_hat_2)
+	E = np.dot(R_2, rho_hat_2)
 	
-	# step 6 - squared scalar distance of obs2
-	r2_2 = np.dot(r_2, r_2)
+	# step 6 - squared scalar distance for obs2
+	R2_2 = np.dot(R_2, R_2)
 	
-	# step 7 - coefficients for scalar distance polynomial
-	a = -(A**2 + 2*A*E + r2_2)
+	# step 7 - coefficients of scalar distance polynomial for obs2
+	a = -(A**2 + 2*A*E + R2_2)
 	b = -2*MU*B*(A + E)
 	c = -(MU**2)*(B**2)
 	
-	# step 8 - find zero of eight degree polynomial
+	# step 8 - find root of scalar distance polynomial for obs2
 	roots = np.roots([1,0,a,0,0,b,0,0,c])
 	physical_roots = []
 	for root in roots:
@@ -378,8 +378,12 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 		zero = newton(poly8, zero, poly8prime, (a, b, c))
 	
 	print('Zero: {}'.format(str(zero)))
+	r_2 = zero # geocentric radius r_2
 	
-	# step 9 - 
+	# step 9 - obtain slant ranges
+	rho_1 = (1 / d_0)*(() / () - d_11)
+	rho_2 = A + MU*B / r_2**3
+	rho_3 = (1 / d_0)*(() / () - d_33)
 	
 	return np.array([])
 
