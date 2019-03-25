@@ -342,16 +342,21 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	plt.plot(x, poly8(x, a, b, c), 'k.', ms=1)
 	plt.axhline(y=0, color='r', linestyle='--')
 	
+	plt.title('Please select a region close to a zero...')
+	plt.xlabel('x')
+	plt.ylabel('F(x)')
+	
 	toggleSelector.RS = RectangleSelector(ax, 
 										  onSelect,
 										  drawtype='box',
 										  interactive=True)
 	
 	plt.connect('key_press_event', toggleSelector)
-	
 	plt.show()
 	
-	print(x_select)
+	zero = newton(poly8, x_select, poly8prime, (a, b, c))
+	
+	print(zero)
 	
 	return np.array([])
 
