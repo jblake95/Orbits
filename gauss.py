@@ -10,6 +10,7 @@ from astropy.table import Table
 from astropy import units as u
 from astropy.coordinates import Latitude, Longitude
 import matplotlib.pyplot as plt
+from matplotlib.widgets import RectangleSelector
 
 G = 6.6740831e-11     # SI units
 M_EARTH = 5.9722e+24  # Mass of Earth [kg]
@@ -102,6 +103,41 @@ def parseInput(args):
 	altitude = loc_tab['altitude']
 	
 	return ephem_tab, latitude, altitude
+
+def toggleSelector(event):
+    """
+    Toggle function compatible with the RectangleSelector widget 
+    in matplotlib.widgets
+    
+    Parameters
+    ----------
+    event : Mouse event
+        Mouse event upon matplotlib artist
+    """
+    print('Key pressed.')
+    if event.key in ['Q', 'q'] and toggleSelector.RS.active:
+        print('RectangleSelector deactivated.')
+        toggleSelector.RS.set_active(False)
+    if event.key in ['A', 'a'] and not toggleSelector.RS.active:
+        print('RectangleSelector activated.')
+        toggleSelector.RS.set_active(True)
+
+def onSelect(eclick, erelease):
+    """
+    Callback function compatible with the RectangleSelector widget
+    in matplotlib.widgets
+    
+    Parameters
+    ----------
+    eclick, erelease : Mouse events
+        Press and release events corresponding to the placement of
+        a rectangle 
+    """
+    global x_select
+    x_select = (eclick.xdata + erelease.xdata) / 2
+    
+    print('Selected: x = {}'.format(str(x_select)))
+    print('The button you used was: {}'.format(str(eclick.button))) 
 
 def selectObs(ephem_tab, n1=None, n2=None, n3=None):
 	"""
@@ -301,9 +337,21 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	# step 8 - find zero of eight degree polynomial
 	x = np.linspace(1, 10000, 10000)
 	
+	fig, ax = plt.subplots()
+	
 	plt.plot(x, poly8(x, a, b, c), 'k.', ms=1)
 	plt.axhline(y=0, color='r', linestyle='--')
+	
+	toggleSelector.RS = RectangleSelector(ax, 
+										  onSelect,
+										  drawtype='box',
+										  interactive=True)
+	
+	plt.connect('key_press_event', toggleSelector)
+	
 	plt.show()
+	
+	print(x_select)
 	
 	return np.array([])
 
