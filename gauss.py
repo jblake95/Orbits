@@ -133,10 +133,10 @@ def onSelect(eclick, erelease):
         Press and release events corresponding to the placement of
         a rectangle 
     """
-    global x_select
-    x_select = (eclick.xdata + erelease.xdata) / 2
+    global zero
+    zero = (eclick.xdata + erelease.xdata) / 2
     
-    print('Selected: x = {}'.format(str(x_select)))
+    print('Selected: x = {}'.format(str(zero)))
     print('The button you used was: {}'.format(str(eclick.button))) 
 
 def selectObs(ephem_tab, n1=None, n2=None, n3=None):
@@ -274,6 +274,8 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	vel_vec : array-like
 	    Velocity vectors for the three observations
 	"""
+	global zero
+	
 	ephem, phi, h = parseInput(args) # from user input
 	
 	# select which observations to use
@@ -335,28 +337,49 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	c = -(MU**2)*(B**2)
 	
 	# step 8 - find zero of eight degree polynomial
-	x = np.linspace(1, 10000, 10000)
+	roots = np.roots([1,0,a,0,0,b,0,0,c])
+	physical_roots = []
+	for root in roots:
+		if not np.iscomplex(root):
+			if root >= 0:
+				physical_roots.append(np.real(root))
 	
-	fig, ax = plt.subplots()
+	if len(physical_roots) == 0:
+		print('Oh dear, no physical roots!')
+		quit()
+	elif len(physical_roots) == 1:
+		print('One physical root found, using this...')
+		zero = physical_roots[0]
+	else:
+		print('Multiple physical roots found. Please choose one...')
+		x_min = min(physical_roots) - 0.5*(max(physical_roots) -
+		                                   min(physical_roots))
+		x_max = max(physical_roots) + 0.2*(max(physical_roots) -
+		                                   min(physical_roots))
+		x_dummy = np.linspace(x_min, x_max, 10000)
 	
-	plt.plot(x, poly8(x, a, b, c), 'k.', ms=1)
-	plt.axhline(y=0, color='r', linestyle='--')
+		fig, ax = plt.subplots()
+		
+		plt.plot(x_dummy, poly8(x_dummy, a, b, c), 'k.', ms=1)
+		plt.axhline(y=0, color='r', linestyle='--')
+		
+		plt.title('Please select a region close to a zero...')
+		plt.xlabel('x')
+		plt.ylabel('F(x)')
+		
+		toggleSelector.RS = RectangleSelector(ax, 
+											  onSelect,
+											  drawtype='box',
+											  interactive=True)
+		
+		plt.connect('key_press_event', toggleSelector)
+		plt.show()
+		
+		zero = newton(poly8, zero, poly8prime, (a, b, c))
 	
-	plt.title('Please select a region close to a zero...')
-	plt.xlabel('x')
-	plt.ylabel('F(x)')
+	print('Zero: {}'.format(str(zero)))
 	
-	toggleSelector.RS = RectangleSelector(ax, 
-										  onSelect,
-										  drawtype='box',
-										  interactive=True)
-	
-	plt.connect('key_press_event', toggleSelector)
-	plt.show()
-	
-	zero = newton(poly8, x_select, poly8prime, (a, b, c))
-	
-	print(zero)
+	# step 9 - 
 	
 	return np.array([])
 
