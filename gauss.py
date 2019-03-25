@@ -377,22 +377,26 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 		
 		zero = newton(poly8, zero, poly8prime, (a, b, c))
 	
-	print('Zero: {}'.format(str(zero)))
-	r_2 = zero # geocentric radius r_2
+	print('Zero: {}'.format(str(zero))) # geocentric radius r_2
 	
 	# step 9 - obtain slant ranges
-	num_1 = (6*(d_31*(tau_1 / tau_3) + d_21*(tau / tau_3))*r_2**3 +
+	num_1 = (6*(d_31*(tau_1 / tau_3) + d_21*(tau / tau_3))*zero**3 +
 	                       MU*d_31*(tau**2 - tau_1**2)*(tau_1 / tau_3))
-	den_1 = 6*r_2**3 + MU*(tau**2 - tau_3**2)
-	num_3 = (6*(d_13*(tau_3 / tau_1) - d_23*(tau / tau_1))*r_2**3 +
+	den_1 = 6*zero**3 + MU*(tau**2 - tau_3**2)
+	num_3 = (6*(d_13*(tau_3 / tau_1) - d_23*(tau / tau_1))*zero**3 +
 	                       MU*d_13*(tau**2 - tau_3**2)*(tau_3 / tau_1))
-	den_3 = 6*r_2**3 + MU*(tau**2 - tau_1**2)
+	den_3 = 6*zero**3 + MU*(tau**2 - tau_1**2)
 	
 	rho_1 = (1 / d_0)*(num_1 / den_1 - d_11)
-	rho_2 = A + MU*B / r_2**3
+	rho_2 = A + MU*B / zero**3
 	rho_3 = (1 / d_0)*(num_3 / den_3 - d_33)
 	
-	print(rho_1, rho_2, rho_3)
+	# step 10 - orbiting body position vectors
+	r_1 = R_1 + rho_1*rho_hat_1
+	r_2 = R_2 + rho_2*rho_hat_2
+	r_3 = R_3 + rho_3*rho_hat_3
+	
+	print(r_1, r_2, r_3)
 	
 	return np.array([])
 
