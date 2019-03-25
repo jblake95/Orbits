@@ -402,7 +402,10 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	g_1 = tau_1 - (1 / 6)*(MU / zero**3)*tau_1**3
 	g_3 = tau_3 - (1 / 6)*(MU / zero**3)*tau_3**3
 	
-	# step 12 - 
+	# step 12 - velocity vector for obs2
+	v_2 = (1 / (f_1*g_3 - f_3*g_1))*(-f_3*r_1 + f_1*r_3)
+	
+	# step 13 - orbital elements
 	
 	return np.array([])
 
@@ -410,6 +413,6 @@ if __name__ == "__main__":
 	
 	args = argParse()
 	
-	vel = performAlgorithm(args)
+	orb_elements = performAlgorithm(args)
 	
 	
