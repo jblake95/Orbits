@@ -299,8 +299,10 @@ def performAlgorithm(args, obs_idx=[None, None, None]):
 	c = -(MU**2)*(B**2)
 	
 	# step 8 - find zero of eight degree polynomial
-	i = np.arange(1, 10000, 1)
-	plt.plot(i, poly8(i, a, b, c))
+	x = np.linspace(1, 10000, 10000)
+	
+	plt.plot(x, poly8(x, a, b, c), 'k.', ms=1)
+	plt.axhline(y=0, color='r', linestyle='--')
 	plt.show()
 	
 	return np.array([])
