@@ -326,7 +326,15 @@ def orbElementsAlgorithm(r_vec, v_vec):
         omega = Angle(2*np.pi - np.arccos(np.dot(N_vec, e_vec) / (N*e)), 
                       u.rad)
     
-    print(omega.deg)
+    # step 13 - true anomaly
+    if v_r >= 0:
+        theta = Angle(np.arccos(np.dot(e_vec, r_vec) / (e*r)), 
+                      u.rad)
+    else:
+        theta = Angle(2*np.pi - np.arccos(np.dot(e_vec, r_vec) / (e*r)), 
+                      u.rad)
+    
+    print(theta.deg)
     
     return np.array([])
 
