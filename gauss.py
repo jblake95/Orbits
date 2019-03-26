@@ -294,7 +294,8 @@ def orbElementsAlgorithm(r_vec, v_vec):
     h = np.sqrt(np.dot(h_vec, h_vec))
     
     # step 6 - inclination [rad]
-    i = Angle(np.arccos(h_vec[2] / h), u.rad)
+    i = Angle(np.arccos(h_vec[2] / h), 
+              u.rad)
     
     # step 7 - node line vector
     k_hat = (0, 0, 1)
@@ -305,9 +306,11 @@ def orbElementsAlgorithm(r_vec, v_vec):
     
     # step 9 - right ascension of the ascending node [rad]
     if N_vec[1] >= 0:
-        Omega = Angle(np.arccos(N_vec[0] / N), u.rad)
+        Omega = Angle(np.arccos(N_vec[0] / N), 
+                      u.rad)
     else:
-        Omega = Angle(2*np.pi - np.arccos(N_vec[0] / N), u.rad)
+        Omega = Angle(2*np.pi - np.arccos(N_vec[0] / N), 
+                      u.rad)
     
     # step 10 - eccentricity vector
     e_vec = (1 / MU)*((v**2 - (MU / r))*r_vec - r*v_r*v_vec)
@@ -315,7 +318,15 @@ def orbElementsAlgorithm(r_vec, v_vec):
     # step 11 - eccentricity
     e = np.sqrt(np.dot(e_vec, e_vec))
     
-    print(e_vec, e)
+    # step 12 - argument of perigree
+    if e_vec[2] >= 0:
+        omega = Angle(np.arccos(np.dot(N_vec, e_vec) / (N*e)), 
+                      u.rad)
+    else:
+        omega = Angle(2*np.pi - np.arccos(np.dot(N_vec, e_vec) / (N*e)), 
+                      u.rad)
+    
+    print(omega.deg)
     
     return np.array([])
 
