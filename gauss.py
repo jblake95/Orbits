@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from scipy.optimize import newton
 from astropy.table import Table
 from astropy import units as u
-from astropy.coordinates import Latitude, Longitude
+from astropy.coordinates import Latitude, Longitude, Angle
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RectangleSelector
 
@@ -294,9 +294,22 @@ def orbElementsAlgorithm(r_vec, v_vec):
 	h = np.sqrt(np.dot(h_vec, h_vec))
 	
 	# step 6 - inclination [rad]
-	i = np.arccos(h_vec[2] / h)
+	i = Angle(np.arccos(h_vec[2] / h), u.rad)
 	
-	print(v_r, h_vec, h, i)
+	# step 7 - node line vector
+	k_hat = (0, 0, 1)
+	N_vec = np.cross(k_hat, h_vec)
+	
+	# step 8 - magnitude of node line vector
+	N = np.sqrt(np.dot(N_vec, N_vec))
+	
+	# step 9 - right ascension of the ascending node [rad]
+	if N_vec[1] >= 0:
+		Omega = Angle(np.arccos(N_vec[0] / N), u.rad)
+	else:
+		Omega = Angle(2*np.pi - np.arccos(N_vec[0] / N), u.rad)
+	
+	print(N_vec, N, Omega.deg, i.deg)
 	
 	return np.array([])
 
