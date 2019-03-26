@@ -274,7 +274,7 @@ def orbElementsAlgorithm(r_vec, v_vec):
         i     - inclination
         e     - eccentricity
         Omega - right ascension of the ascending node
-        omega - argument of perigree
+        omega - argument of perigee
         theta - true anomaly
         a     - semimajor axis
     """
@@ -318,7 +318,7 @@ def orbElementsAlgorithm(r_vec, v_vec):
     # step 11 - eccentricity
     e = np.sqrt(np.dot(e_vec, e_vec))
     
-    # step 12 - argument of perigree
+    # step 12 - argument of perigee
     if e_vec[2] >= 0:
         omega = Angle(np.arccos(np.dot(N_vec, e_vec) / (N*e)), 
                       u.rad)
@@ -334,7 +334,14 @@ def orbElementsAlgorithm(r_vec, v_vec):
         theta = Angle(2*np.pi - np.arccos(np.dot(e_vec, r_vec) / (e*r)), 
                       u.rad)
     
-    print(theta.deg)
+    # additional extras - perigee & apogee radii, semimajor axis, period
+    r_p = (h**2 / MU)*(1 / (1 + e*np.cos(0.)))
+    r_a = (h**2 / MU)*(1 / (1 + e*np.cos(np.pi)))
+    
+    a = (1 / 2)*(r_p + r_a)
+    T = (2*np.pi / np.sqrt(MU))*a**(3 / 2) / 3600
+    
+    print(r_p, r_a, a, T)
     
     return np.array([])
 
