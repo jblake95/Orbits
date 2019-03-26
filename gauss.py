@@ -256,15 +256,15 @@ def poly8prime(x, a, b, c):
 	"""
 	return 8*x**7 + 6*a*x**5 + 3*b*x**2
 
-def orbElementsAlgorithm(r, v):
+def orbElementsAlgorithm(r_vec, v_vec):
 	"""
 	Obtain the orbital elements from the state vector
 	
 	Parameters
 	----------
-	r : array-like
+	r_vec : array-like
 	    Position vector for the orbiting body
-	v : array-like
+	v_vec : array-like
 	    Velocity vector for the orbiting body
 	
 	Returns
@@ -276,11 +276,29 @@ def orbElementsAlgorithm(r, v):
 	    Omega - right ascension of the ascending node
 	    omega - argument of perigree
 	    theta - true anomaly
-	    a     - semimajor axis    
+	    a     - semimajor axis
 	"""
+	# step 1 - distance
+	r = np.sqrt(np.dot(r_vec, r_vec))
 	
+	# step 2 - speed
+	v = np.sqrt(np.dot(v_vec, v_vec))
 	
-	return orb_elements
+	# step 3 - radial velocity
+	v_r = np.dot(v_vec, r_vec) / r
+	
+	# step 4 - specific angular momentum
+	h_vec = np.cross(r_vec, v_vec)
+	
+	# step 5 - magnitude of specific angular momentum
+	h = np.sqrt(np.dot(h_vec, h_vec))
+	
+	# step 6 - inclination [rad]
+	i = np.arccos(h_vec[2] / h)
+	
+	print(v_r, h_vec, h, i)
+	
+	return np.array([])
 
 def gaussAlgorithm(args, obs_idx=[None, None, None]):
 	"""
