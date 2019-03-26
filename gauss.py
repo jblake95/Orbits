@@ -339,11 +339,27 @@ def orbElementsAlgorithm(r_vec, v_vec):
     r_a = (h**2 / MU)*(1 / (1 + e*np.cos(np.pi)))
     
     a = (1 / 2)*(r_p + r_a)
-    T = (2*np.pi / np.sqrt(MU))*a**(3 / 2) / 3600
+    T = (2*np.pi / np.sqrt(MU))*a**(3 / 2)
     
-    print(r_p, r_a, a, T)
+    print('--------------------\n'
+          'Orbital information:\n'
+          '--------------------\n'
+          'a[km]      = {}\n'
+          'e          = {}\n'
+          'i[deg]     = {}\n'
+          'Omega[deg] = {}\n'
+          'omega[deg] = {}\n'
+          'theta[deg] = {}\n'
+          'T[hrs]     = {}\n'
+          '--------------------'.format(str(a),
+                                        str(e),
+                                        str(i.deg),
+                                        str(Omega.deg),
+                                        str(omega.deg),
+                                        str(theta.deg),
+                                        str(T / 3600.)))
     
-    return np.array([])
+    return np.array([a, e, i.deg, Omega.deg, omega.deg, theta.deg])
 
 def gaussAlgorithm(args, obs_idx=[None, None, None]):
     """
@@ -495,9 +511,9 @@ def gaussAlgorithm(args, obs_idx=[None, None, None]):
     v_2 = (1 / (f_1*g_3 - f_3*g_1))*(-f_3*r_1 + f_1*r_3)
     
     # step 13 - orbital elements
-    ## using example in Curtis textbook for testing, algorithm 4.2
-    r_2 = np.array([-6045, -3490, 2500])
-    v_2 = np.array([-3.457, 6.618, 2.533])
+    ## using example in Curtis textbook for testing, algorithm 5.5
+    r_2 = np.array([5662.1, 6538, 3269])
+    v_2 = np.array([-3.8856, 5.1214, -2.2433])
     
     orb_elements = orbElementsAlgorithm(r_2, v_2)
     
