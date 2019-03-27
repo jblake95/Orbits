@@ -386,6 +386,12 @@ def improveOrbit(r_vec, v_vec):
     r = np.sqrt(np.dot(r_vec, r_vec))
     v = np.sqrt(np.dot(v_vec, v_vec))
     
+    # step 2 - reciprocal of semimajor axis
+    alpha = 2 / r - v**2 / MU
+    
+    # step 3 - radial component of v_vec
+    v_r = np.dot(v_vec, r_vec) / r
+    
     
     
     return orb_elements
