@@ -263,20 +263,20 @@ def orbElementsAlgorithm(r_vec, v_vec):
     Parameters
     ----------
     r_vec : array-like
-        Position vector for the orbiting body
+        Position vector for the orbiting body [km]
     v_vec : array-like
-        Velocity vector for the orbiting body
+        Velocity vector for the orbiting body [km/s]
     
     Returns
     -------
     orb_elements : array-like
         Orbital elements for the orbiting body in following order
-        i     - inclination
+        a     - semimajor axis [km]
         e     - eccentricity
-        Omega - right ascension of the ascending node
-        omega - argument of perigee
-        theta - true anomaly
-        a     - semimajor axis
+        i     - inclination [deg]
+        Omega - right ascension of the ascending node [deg]
+        omega - argument of perigee [deg]
+        theta - true anomaly [deg]
     """
     # step 1 - distance
     r = np.sqrt(np.dot(r_vec, r_vec))
@@ -361,7 +361,36 @@ def orbElementsAlgorithm(r_vec, v_vec):
     
     return np.array([a, e, i.deg, Omega.deg, omega.deg, theta.deg])
 
-def gaussAlgorithm(args, obs_idx=[None, None, None]):
+def improveOrbit(r_vec, v_vec):
+    """
+    Iterative improvement of the orbit determined with Gauss method
+    
+    Parameters
+    ----------
+    r_vec, v_vec : array-like
+        The state vectors obtained using the Gauss method
+    
+    Returns
+    -------
+    orb_elements : array-like
+        Orbital elements for the orbiting body in following order
+        a     - semimajor axis [km]
+        e     - eccentricity
+        i     - inclination [deg]
+        Omega - right ascension of the ascending node [deg]
+        omega - argument of perigee [deg]
+        theta - true anomaly [deg]
+        improved using 'exact' values of the Lagrange coefficients
+    """
+    # step 1 - distance and speed
+    r = np.sqrt(np.dot(r_vec, r_vec))
+    v = np.sqrt(np.dot(v_vec, v_vec))
+    
+    
+    
+    return orb_elements
+
+def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     """
     Carry out the Gauss method of preliminary orbit determination
     
@@ -373,6 +402,9 @@ def gaussAlgorithm(args, obs_idx=[None, None, None]):
         Indices corresponding to observations to feed into algorithm
         (format: [n1, n2, n3] where ni specifies index i)
         default = None, will automatically select start-middle-end
+    improve : bool, optional
+        Toggle to perform iterative improvement of the determined orbit
+        default = False
     
     Returns
     -------
@@ -511,10 +543,6 @@ def gaussAlgorithm(args, obs_idx=[None, None, None]):
     v_2 = (1 / (f_1*g_3 - f_3*g_1))*(-f_3*r_1 + f_1*r_3)
     
     # step 13 - orbital elements
-    ## using example in Curtis textbook for testing, algorithm 5.5
-    r_2 = np.array([5662.1, 6538, 3269])
-    v_2 = np.array([-3.8856, 5.1214, -2.2433])
-    
     orb_elements = orbElementsAlgorithm(r_2, v_2)
     
     return orb_elements
