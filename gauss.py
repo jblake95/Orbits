@@ -434,13 +434,24 @@ def solveUniversalKepler(delta_t, r_0, v_r0, alpha, tolerance=1e-6):
     # step 1 - initial estimate of chi_i
     chi = np.sqrt(MU)*abs(alpha)*delta_t
     
-    while ratio > tolerance:
+    ratio = np.inf
+    while abs(ratio) > tolerance:
+        # step 4 - if ratio (see below) exceeds tolerance, update chi
+        if ratio is not np.inf:
+            chi -= ratio
+        
+        # step 2 - calculate f(chi) & f'(chi)
         z = alpha*chi**2
-        f_chi = (r_0*v_r0 / np.sqrt(MU))*chi**2*stumpffC(z) +
-                (1 - alpha*r_0)*chi**3*stumpffS(z) +
-                r_0*chi - np.sqrt(MU)*delta_t
-        f_chi_prime = 
+        f_chi = ((r_0*v_r0 / np.sqrt(MU))*chi**2*stumpffC(z) +
+                (1 - alpha*r_0)*chi**3*stumpffS(z) + r_0*chi -
+                np.sqrt(MU)*delta_t)
+        f_chi_prime = ((r_0*v_r0 / np.sqrt(MU))*chi*(1 - z*stumpffS(z)) +
+                      (1 - alpha*r_0)*chi**2*stumpffC(z) + r_0)
+        
+        # step 3 - calculate ratio
+        ratio = f_chi / f_chi_prime
     
+    # step 5 - if ratio is less than tolerance, accept chi as solution
     return chi
 
 def improveOrbit(r_vec, v_vec, tau_1, tau_3):
@@ -641,6 +652,11 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
 if __name__ == "__main__":
     
     args = argParse()
+    
+    chi = solveUniversalKepler(3600, 10000, 3.0752, -5.0878e-5)
+    print('chi: {}'.format(str(chi)))
+    
+    input('enter')
     
     orb_elements = gaussAlgorithm(args)
     
