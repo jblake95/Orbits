@@ -495,7 +495,14 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3):
     v_r = np.dot(v_vec, r_vec) / r
     
     # step 4 - solve universal Kepler's equation for chi_1 and chi_3
+    chi_1 = solveUniversalKepler(tau_1, r, v_r, alpha)
+    chi_3 = solveUniversalKepler(tau_3, r, v_r, alpha)
+    print(chi_1, chi_3)
     
+    # step 5 - use chi_1 & chi_3 to determine new Lagrange coefficients
+    f_1 = 
+    
+    orb_elements = 0 # dummy 
     
     return orb_elements
 
@@ -654,16 +661,14 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     # step 13 - orbital elements
     orb_elements = orbElementsAlgorithm(r_2, v_2)
     
+    # Improve the state vector 
+    _ = improveOrbit(r_2, v_2, tau_1, tau_3)
+    
     return orb_elements
 
 if __name__ == "__main__":
     
     args = argParse()
-    
-    chi = solveUniversalKepler(3600, 10000, 3.0752, -5.0878e-5)
-    print('chi: {}'.format(str(chi)))
-    
-    input('enter')
     
     orb_elements = gaussAlgorithm(args)
     
