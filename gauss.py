@@ -434,8 +434,13 @@ def solveUniversalKepler(delta_t, r_0, v_r0, alpha, tolerance=1e-6):
     # step 1 - initial estimate of chi_i
     chi = np.sqrt(MU)*abs(alpha)*delta_t
     
+    count = 0
     ratio = np.inf
     while abs(ratio) > tolerance:
+        if count > 10:
+            print('Looped 10 times. Try increasing tolerance...')
+            quit()
+        
         # step 4 - if ratio (see below) exceeds tolerance, update chi
         if ratio is not np.inf:
             chi -= ratio
@@ -450,6 +455,8 @@ def solveUniversalKepler(delta_t, r_0, v_r0, alpha, tolerance=1e-6):
         
         # step 3 - calculate ratio
         ratio = f_chi / f_chi_prime
+        
+        count += 1
     
     # step 5 - if ratio is less than tolerance, accept chi as solution
     return chi
