@@ -361,7 +361,60 @@ def orbElementsAlgorithm(r_vec, v_vec):
     
     return np.array([a, e, i.deg, Omega.deg, omega.deg, theta.deg])
 
-def improveOrbit(r_vec, v_vec):
+def stumpffC(z):
+    """
+    Form of the Stumpff function C(z) in terms of circular and 
+    hyperbolic trig functions
+    
+    Parameters
+    ----------
+    z : float
+        Input value, calculated from the reciprocal semimajor axis and
+        universal anomaly as z_i = alpha*chi_i**2
+    
+    Returns
+    -------
+    c : float
+        Output value
+    """
+    if z > 0:
+        c = (1 - np.cos(np.sqrt(z))) / z
+    elif z < 0:
+        c = (np.cosh(np.sqrt(-z)) - 1) / -z
+    else:
+        c = 1 / 2
+    
+    return c
+
+def solveUniversalKepler(delta_t, r_0, v_r0, alpha, tolerance=1e-6):
+    """
+    Solve the universal Kepler's equation for the universal anomaly
+    
+    Parameters
+    ----------
+    delta_t : float
+        Time interval
+    r_0, v_r0 : float
+        Orbital radius and radial velocity at time t = t_0
+    alpha : float
+        Reciprocal of semimajor axis
+    tolerance : float
+        Error tolerance defining algorithmic success
+    
+    Returns
+    -------
+    chi : float
+        Universal anomaly
+    """
+    # step 1 - initial estimate of chi_i
+    chi = np.sqrt(MU)*abs(alpha)*delta_t
+    
+    while ratio > tolerance:
+        f_chi = (r_0*v_r0 / np.sqrt(MU))*chi**2*
+    
+    return chi
+
+def improveOrbit(r_vec, v_vec, tau_1, tau_3):
     """
     Iterative improvement of the orbit determined with Gauss method
     
@@ -369,6 +422,8 @@ def improveOrbit(r_vec, v_vec):
     ----------
     r_vec, v_vec : array-like
         The state vectors obtained using the Gauss method
+    tau_1, tau_3 : float
+        Time intervals from initial stages of the Gauss method
     
     Returns
     -------
@@ -392,6 +447,7 @@ def improveOrbit(r_vec, v_vec):
     # step 3 - radial component of v_vec
     v_r = np.dot(v_vec, r_vec) / r
     
+    # step 4 - solve universal Kepler's equation for chi_1 and chi_3
     
     
     return orb_elements
