@@ -386,6 +386,31 @@ def stumpffC(z):
     
     return c
 
+def stumpffS(z):
+    """
+    Form of the Stumpff function S(z) in terms of circular and 
+    hyperbolic trig functions
+    
+    Parameters
+    ----------
+    z : float
+        Input value, calculated from the reciprocal semimajor axis and
+        universal anomaly as z_i = alpha*chi_i**2
+    
+    Returns
+    -------
+    s : float
+        Output value
+    """
+    if z > 0:
+        s = (np.sqrt(z) - np.sin(np.sqrt(z))) / np.sqrt(z)**3
+    elif z < 0:
+        s = (np.sinh(np.sqrt(-z)) - np.sqrt(-z)) / np.sqrt(-z)**3
+    else:
+        s = 1 / 6
+    
+    return s
+
 def solveUniversalKepler(delta_t, r_0, v_r0, alpha, tolerance=1e-6):
     """
     Solve the universal Kepler's equation for the universal anomaly
@@ -410,7 +435,11 @@ def solveUniversalKepler(delta_t, r_0, v_r0, alpha, tolerance=1e-6):
     chi = np.sqrt(MU)*abs(alpha)*delta_t
     
     while ratio > tolerance:
-        f_chi = (r_0*v_r0 / np.sqrt(MU))*chi**2*
+        z = alpha*chi**2
+        f_chi = (r_0*v_r0 / np.sqrt(MU))*chi**2*stumpffC(z) +
+                (1 - alpha*r_0)*chi**3*stumpffS(z) +
+                r_0*chi - np.sqrt(MU)*delta_t
+        f_chi_prime = 
     
     return chi
 
