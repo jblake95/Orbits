@@ -497,7 +497,7 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3):
         # step 3 - radial component of v_vec
         v_r = np.dot(v_vec, r_vec) / r
         
-        # step 4 - solve universal Kepler's equation for chi_1 & chi_3
+        # step 4 - solve universal Kepler's equation for chi_i
         chi_1 = solveUniversalKepler(tau_1, r, v_r, alpha)
         chi_3 = solveUniversalKepler(tau_3, r, v_r, alpha)
         
@@ -510,7 +510,12 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3):
         f_3 = 1 - (chi_3**2 / r)*stumpffC(z_3)
         g_3 = tau_3 - (1 / np.sqrt(MU))*chi_3**3*stumpffS(z_3)
         
-        # step 6 - 
+        # step 6 - determine c_i
+        c_1 = g_3 / (f_1*g_3 - f_3*g_1)
+        c_3 = -g_1 / (f_1*g_3 - f_3*g_1)
+        
+        # step 7 - update values of rho_i
+        
         
         # step 10 - check rho_i unchanged within desired precision
         if i != 0:
@@ -520,7 +525,6 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3):
                     break
         
         i += 1
-    
     
     orb_elements = 0 # dummy 
     return orb_elements
