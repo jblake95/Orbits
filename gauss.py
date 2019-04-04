@@ -461,7 +461,7 @@ def solveUniversalKepler(delta_t, r_0, v_r0, alpha, tolerance=1e-6):
     # step 5 - if ratio is less than tolerance, accept chi as solution
     return chi
 
-def improveOrbit(r_vec, v_vec, tau_1, tau_3):
+def improveOrbit(r_vec, v_vec, tau_1, tau_3, p):
     """
     Iterative improvement of the orbit determined with Gauss method
     
@@ -471,6 +471,8 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3):
         The state vectors obtained using the Gauss method
     tau_1, tau_3 : float
         Time intervals from initial stages of the Gauss method
+    p : dict
+        Dictionary of parameters carried forward from the Gauss method
     
     Returns
     -------
@@ -515,15 +517,23 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3):
         c_3 = -g_1 / (f_1*g_3 - f_3*g_1)
         
         # step 7 - update values of rho_i
+        rho_1 = (1 / p['d_0'])*(-p['d_11'] + (1 / c_1)*p['d_21'] -
+                                (c_3 / c_1)*p['d_31'])
+        rho_2 = (1 / p['d_0'])*(-c_1*p['d_12'] + p['d_22'] - 
+                                c_3*p['d_32'])
+        rho_3 = (1 / p['d_0'])*(-(c_1 / c_3)*p['d_13'] + 
+                                (1 / c_3)*p['d_23'] - p['d_33'])
+        print(rho_1, rho_2, rho_3)
         
-        
+        """
         # step 10 - check rho_i unchanged within desired precision
         if i != 0:
             if (rho_1[i] == rho_1[i-1] and 
                 rho_2[i] == rho_2[i-1] and
                 rho_3[i] == rho_3[i-1]):
                     break
-        
+        """
+        input('enter.')
         i += 1
     
     orb_elements = 0 # dummy 
@@ -666,7 +676,7 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     rho_1 = (1 / d_0)*(num_1 / den_1 - d_11)
     rho_2 = A + MU*B / zero**3
     rho_3 = (1 / d_0)*(num_3 / den_3 - d_33)
-    
+    print(rho_1, rho_2, rho_3)
     # step 10 - orbiting body position vectors
     r_1 = R_1 + rho_1*rho_hat_1
     r_2 = R_2 + rho_2*rho_hat_2
@@ -685,7 +695,12 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     orb_elements = orbElementsAlgorithm(r_2, v_2)
     
     # Improve the state vector 
-    _ = improveOrbit(r_2, v_2, tau_1, tau_3)
+    params = {}
+    params.update({'d_0':d_0, 
+                   'd_11':d_11, 'd_12':d_12, 'd_13':d_13,
+                   'd_21':d_21, 'd_22':d_22, 'd_23':d_23,
+                   'd_31':d_31, 'd_32':d_32, 'd_33':d_33})
+    _ = improveOrbit(r_2, v_2, tau_1, tau_3, params)
     
     return orb_elements
 
