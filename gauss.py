@@ -484,26 +484,45 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3):
         theta - true anomaly [deg]
         improved using 'exact' values of the Lagrange coefficients
     """
-    # step 1 - distance and speed
-    r = np.sqrt(np.dot(r_vec, r_vec))
-    v = np.sqrt(np.dot(v_vec, v_vec))
+    i = 0
+    rho_1, rho_2, rho_3 = [], [], []
+    while True:
+        # step 1 - distance and speed
+        r = np.sqrt(np.dot(r_vec, r_vec))
+        v = np.sqrt(np.dot(v_vec, v_vec))
+        
+        # step 2 - reciprocal of semimajor axis
+        alpha = 2 / r - v**2 / MU
+        
+        # step 3 - radial component of v_vec
+        v_r = np.dot(v_vec, r_vec) / r
+        
+        # step 4 - solve universal Kepler's equation for chi_1 & chi_3
+        chi_1 = solveUniversalKepler(tau_1, r, v_r, alpha)
+        chi_3 = solveUniversalKepler(tau_3, r, v_r, alpha)
+        
+        # step 5 - use chi_i to determine new Lagrange coefficients
+        z_1 = alpha*chi_1**2
+        z_3 = alpha*chi_3**2
+        
+        f_1 = 1 - (chi_1**2 / r)*stumpffC(z_1)
+        g_1 = tau_1 - (1 / np.sqrt(MU))*chi_1**3*stumpffS(z_1)
+        f_3 = 1 - (chi_3**2 / r)*stumpffC(z_3)
+        g_3 = tau_3 - (1 / np.sqrt(MU))*chi_3**3*stumpffS(z_3)
+        
+        # step 6 - 
+        
+        # step 10 - check rho_i unchanged within desired precision
+        if i != 0:
+            if (rho_1[i] == rho_1[i-1] and 
+                rho_2[i] == rho_2[i-1] and
+                rho_3[i] == rho_3[i-1]):
+                    break
+        
+        i += 1
     
-    # step 2 - reciprocal of semimajor axis
-    alpha = 2 / r - v**2 / MU
-    
-    # step 3 - radial component of v_vec
-    v_r = np.dot(v_vec, r_vec) / r
-    
-    # step 4 - solve universal Kepler's equation for chi_1 and chi_3
-    chi_1 = solveUniversalKepler(tau_1, r, v_r, alpha)
-    chi_3 = solveUniversalKepler(tau_3, r, v_r, alpha)
-    print(chi_1, chi_3)
-    
-    # step 5 - use chi_1 & chi_3 to determine new Lagrange coefficients
-    f_1 = 
     
     orb_elements = 0 # dummy 
-    
     return orb_elements
 
 def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
