@@ -513,6 +513,10 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         theta - true anomaly [deg]
         improved using 'exact' values of the Lagrange coefficients
     """
+    print('r_vec: ', r_vec)
+    print('v_vec: ', v_vec)
+    print('tau_1: {} tau_3: {}'.format(str(tau_1),
+                                       str(tau_3)))
     i = 0
     rho_1_list = [round_sig(p['rho_1'], sig=sig)]
     rho_2_list = [round_sig(p['rho_2'], sig=sig)]
@@ -521,13 +525,14 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         # step 1 - distance and speed
         r = np.sqrt(np.dot(r_vec, r_vec))
         v = np.sqrt(np.dot(v_vec, v_vec))
-        
+        print('r: {} v: {}'.format(str(r),
+                                   str(v)))
         # step 2 - reciprocal of semimajor axis
         alpha = 2 / r - v**2 / MU
-        
+        print('alpha: {}'.format(str(alpha)))
         # step 3 - radial component of v_vec
         v_r = np.dot(v_vec, r_vec) / r
-        
+        print('v_r: {}'.format(str(v_r)))
         # step 4 - solve universal Kepler's equation for chi_i
         chi_1 = solveUniversalKepler(tau_1, 
                                      r, 
@@ -539,20 +544,26 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
                                      v_r, 
                                      alpha,
                                      tolerance=tolerance)
-        
+        print('chi_1: {} chi_3: {}'.format(str(chi_1),
+                                           str(chi_3)))
         # step 5 - use chi_i to determine new Lagrange coefficients
         z_1 = alpha*chi_1**2
         z_3 = alpha*chi_3**2
-        
+        print('z_1: {} z_3: {}'.format(str(z_1),
+                                       str(z_3)))
         f_1 = 1 - (chi_1**2 / r)*stumpffC(z_1)
         g_1 = tau_1 - (1 / np.sqrt(MU))*chi_1**3*stumpffS(z_1)
         f_3 = 1 - (chi_3**2 / r)*stumpffC(z_3)
         g_3 = tau_3 - (1 / np.sqrt(MU))*chi_3**3*stumpffS(z_3)
-        
+        print('f_1: {} f_3: {}'.format(str(f_1),
+                                       str(f_3)))
+        print('g_1: {} g_3: {}'.format(str(g_1),
+                                       str(g_3)))
         # step 6 - determine c_i
         c_1 = g_3 / (f_1*g_3 - f_3*g_1)
         c_3 = -g_1 / (f_1*g_3 - f_3*g_1)
-        
+        print('c_1: {} c_3: {}'.format(str(c_1),
+                                       str(c_3)))
         # step 7 - update values of rho_i
         rho_1 = (1 / p['d_0'])*(-p['d_11'] + (1 / c_1)*p['d_21'] -
                                 (c_3 / c_1)*p['d_31'])
@@ -560,7 +571,9 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
                                 c_3*p['d_32'])
         rho_3 = (1 / p['d_0'])*(-(c_1 / c_3)*p['d_13'] + 
                                 (1 / c_3)*p['d_23'] - p['d_33'])
-        
+        print('rho_1: {} rho_2: {} rho_3: {}'.format(str(rho_1),
+                                                     str(rho_2),
+                                                     str(rho_3)))
         rho_1_list.append(round_sig(rho_1, sig=sig))
         rho_2_list.append(round_sig(rho_2, sig=sig))
         rho_3_list.append(round_sig(rho_3, sig=sig))
@@ -569,10 +582,12 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         r_1 = p['R_1'] + rho_1*p['rho_hat_1']
         r_2 = p['R_2'] + rho_2*p['rho_hat_2']
         r_3 = p['R_3'] + rho_3*p['rho_hat_3']
-        
+        print('r_1: ', r_1)
+        print('r_2: ', r_2)
+        print('r_3: ', r_3)
         # step 9 - update velocity vector v
         v_2 = (1 / (f_1*g_3 - f_3*g_1))*(-f_3*r_1 + f_1*r_3)
-        
+        print('v_2: ', v_2)
         # step 10 - check if rho_i are the 'same' to within sig figs
         if (rho_1_list[i] == rho_1_list[i-1] and 
             rho_2_list[i] == rho_2_list[i-1] and
@@ -584,11 +599,14 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         else:
             r_vec, v_vec = r_2, v_2 # update state vector and repeat
         
+        """
         print('Step {}: {} {} {}'.format(str(i + 1),
                                          str(rho_1),
                                          str(rho_2),
                                          str(rho_3)))
-        
+        """
+        print('r_vec: ', r_vec)
+        print('v_vec: ', v_vec)
         i += 1
         input('enter.')
     
