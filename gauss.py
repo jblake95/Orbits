@@ -461,7 +461,28 @@ def solveUniversalKepler(delta_t, r_0, v_r0, alpha, tolerance=1e-6):
     # step 5 - if ratio is less than tolerance, accept chi as solution
     return chi
 
-def improveOrbit(r_vec, v_vec, tau_1, tau_3, p):
+def round_sig(x, sig=5):
+    """
+    Round a given number to the requested number of significant figures
+    
+    Parameters
+    ----------
+    x : float
+        Number to be rounded
+    sig : int
+        Number of significant figures
+    
+    Returns
+    -------
+    y : float
+        Rounded number
+    """
+    if x == 0.:
+        return 0.
+    else:
+        return round(x, sig - int(np.floor(np.log10(abs(x)))) - 1)
+
+def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
     """
     Iterative improvement of the orbit determined with Gauss method
     
@@ -473,6 +494,12 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p):
         Time intervals from initial stages of the Gauss method
     p : dict
         Dictionary of parameters carried forward from the Gauss method
+    tolerance : float, optional
+        Error tolerance for universal Kepler equation solver
+        Default = 1e-6
+    sig : int, optional
+        Number of significant figures for improvement algorithm success
+        Default = 5
     
     Returns
     -------
@@ -487,7 +514,9 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p):
         improved using 'exact' values of the Lagrange coefficients
     """
     i = 0
-    rho_1, rho_2, rho_3 = [], [], []
+    rho_1_list = [round_sig(p['rho_1'], sig=sig)]
+    rho_2_list = [round_sig(p['rho_2'], sig=sig)]
+    rho_3_list = [round_sig(p['rho_3'], sig=sig)]
     while True:
         # step 1 - distance and speed
         r = np.sqrt(np.dot(r_vec, r_vec))
@@ -500,8 +529,16 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p):
         v_r = np.dot(v_vec, r_vec) / r
         
         # step 4 - solve universal Kepler's equation for chi_i
-        chi_1 = solveUniversalKepler(tau_1, r, v_r, alpha)
-        chi_3 = solveUniversalKepler(tau_3, r, v_r, alpha)
+        chi_1 = solveUniversalKepler(tau_1, 
+                                     r, 
+                                     v_r, 
+                                     alpha,
+                                     tolerance=tolerance)
+        chi_3 = solveUniversalKepler(tau_3, 
+                                     r, 
+                                     v_r, 
+                                     alpha,
+                                     tolerance=tolerance)
         
         # step 5 - use chi_i to determine new Lagrange coefficients
         z_1 = alpha*chi_1**2
@@ -524,26 +561,36 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p):
         rho_3 = (1 / p['d_0'])*(-(c_1 / c_3)*p['d_13'] + 
                                 (1 / c_3)*p['d_23'] - p['d_33'])
         
+        rho_1_list.append(round_sig(rho_1, sig=sig))
+        rho_2_list.append(round_sig(rho_2, sig=sig))
+        rho_3_list.append(round_sig(rho_3, sig=sig))
+        
         # step 8 - update geocentric position vectors r_i
         r_1 = p['R_1'] + rho_1*p['rho_hat_1']
         r_2 = p['R_2'] + rho_2*p['rho_hat_2']
         r_3 = p['R_3'] + rho_3*p['rho_hat_3']
         
         # step 9 - update velocity vector v
-        v = (1 / (f_1*g_3 - f_3*g_1))*(-f_3*r_1 + f_1*r_3)
-        print(r_2)
-        print(v)
+        v_2 = (1 / (f_1*g_3 - f_3*g_1))*(-f_3*r_1 + f_1*r_3)
         
-        """
-        # step 10 - check rho_i unchanged within desired precision
-        if i != 0:
-            if (rho_1[i] == rho_1[i-1] and 
-                rho_2[i] == rho_2[i-1] and
-                rho_3[i] == rho_3[i-1]):
-                    break
-        """
-        input('enter.')
+        # step 10 - check if rho_i are the 'same' to within sig figs
+        if (rho_1_list[i] == rho_1_list[i-1] and 
+            rho_2_list[i] == rho_2_list[i-1] and
+            rho_3_list[i] == rho_3_list[i-1]):
+            break
+        elif i > 100:
+            print('Failing to converge: try a more generous sig...')
+            quit()
+        else:
+            r_vec, v_vec = r_2, v_2 # update state vector and repeat
+        
+        print('Step {}: {} {} {}'.format(str(i + 1),
+                                         str(rho_1),
+                                         str(rho_2),
+                                         str(rho_3)))
+        
         i += 1
+        input('enter.')
     
     orb_elements = 0 # dummy 
     return orb_elements
@@ -704,8 +751,34 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     orb_elements = orbElementsAlgorithm(r_2, v_2)
     
     # Improve the state vector 
+    ## Using example from Curtis textbook Chapter 5.10
+    r_2 = np.array([5659.1, 6533.8, 3270.1])
+    v_2 = np.array([-3.880, 5.1156, -2.2387])
+    tau_1 = -118.10
+    tau_3 = 119.47
+    rho_1 = 3639.1
+    rho_2 = 3864.8
+    rho_3 = 4172.8
+    R_1 = np.array([3489.8, 3430.2, 4078.5])
+    R_2 = np.array([3460.1, 3460.1, 4078.5])
+    R_3 = np.array([3429.9, 3490.1, 4078.5])
+    rho_hat_1 = np.array([0.71643, 0.68074, -0.15270])
+    rho_hat_2 = np.array([0.56897, 0.79531, -0.20917])
+    rho_hat_3 = np.array([0.41841, 0.87007, -0.26059])
+    d_0 = -0.0015198
+    d_11 = 782.15
+    d_12 = 1646.5
+    d_13 = 887.10
+    d_21 = 784.72
+    d_22 = 1651.5
+    d_23 = 889.60
+    d_31 = 787.31
+    d_32 = 1656.6
+    d_33 = 892.13
+    
     params = {}
-    params.update({'R_1':R_1, 'R_2':R_2, 'R_3':R_3,
+    params.update({'rho_1':rho_1, 'rho_2':rho_2, 'rho_3':rho_3,
+                   'R_1':R_1, 'R_2':R_2, 'R_3':R_3,
                    'rho_hat_1':rho_hat_1, 
                    'rho_hat_2':rho_hat_2,
                    'rho_hat_3':rho_hat_3,
