@@ -523,7 +523,16 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p):
                                 c_3*p['d_32'])
         rho_3 = (1 / p['d_0'])*(-(c_1 / c_3)*p['d_13'] + 
                                 (1 / c_3)*p['d_23'] - p['d_33'])
-        print(rho_1, rho_2, rho_3)
+        
+        # step 8 - update geocentric position vectors r_i
+        r_1 = p['R_1'] + rho_1*p['rho_hat_1']
+        r_2 = p['R_2'] + rho_2*p['rho_hat_2']
+        r_3 = p['R_3'] + rho_3*p['rho_hat_3']
+        
+        # step 9 - update velocity vector v
+        v = (1 / (f_1*g_3 - f_3*g_1))*(-f_3*r_1 + f_1*r_3)
+        print(r_2)
+        print(v)
         
         """
         # step 10 - check rho_i unchanged within desired precision
@@ -676,8 +685,8 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     rho_1 = (1 / d_0)*(num_1 / den_1 - d_11)
     rho_2 = A + MU*B / zero**3
     rho_3 = (1 / d_0)*(num_3 / den_3 - d_33)
-    print(rho_1, rho_2, rho_3)
-    # step 10 - orbiting body position vectors
+    
+    # step 10 - orbiting body geocentric position vectors
     r_1 = R_1 + rho_1*rho_hat_1
     r_2 = R_2 + rho_2*rho_hat_2
     r_3 = R_3 + rho_3*rho_hat_3
@@ -696,7 +705,11 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     
     # Improve the state vector 
     params = {}
-    params.update({'d_0':d_0, 
+    params.update({'R_1':R_1, 'R_2':R_2, 'R_3':R_3,
+                   'rho_hat_1':rho_hat_1, 
+                   'rho_hat_2':rho_hat_2,
+                   'rho_hat_3':rho_hat_3,
+                   'd_0':d_0, 
                    'd_11':d_11, 'd_12':d_12, 'd_13':d_13,
                    'd_21':d_21, 'd_22':d_22, 'd_23':d_23,
                    'd_31':d_31, 'd_32':d_32, 'd_33':d_33})
