@@ -518,6 +518,10 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
     print('tau_1: {} tau_3: {}'.format(str(tau_1),
                                        str(tau_3)))
     i = 0
+    f_1_list = [p['f_1']]
+    f_3_list = [p['f_3']]
+    g_1_list = [p['g_1']]
+    g_3_list = [p['g_3']]
     rho_1_list = [round_sig(p['rho_1'], sig=sig)]
     rho_2_list = [round_sig(p['rho_2'], sig=sig)]
     rho_3_list = [round_sig(p['rho_3'], sig=sig)]
@@ -559,6 +563,17 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
                                        str(f_3)))
         print('g_1: {} g_3: {}'.format(str(g_1),
                                        str(g_3)))
+        
+        f_1_list.append(f_1)
+        f_3_list.append(f_3)
+        g_1_list.append(g_1)
+        g_3_list.append(g_3)
+        
+        f_1 = (f_1_list[i] + f_1_list[i-1]) / 2
+        f_3 = (f_3_list[i] + f_3_list[i-1]) / 2
+        g_1 = (g_1_list[i] + g_1_list[i-1]) / 2
+        g_3 = (g_3_list[i] + g_3_list[i-1]) / 2 # take average f_i & g_i
+        
         # step 6 - determine c_i
         c_1 = g_3 / (f_1*g_3 - f_3*g_1)
         c_3 = -g_1 / (f_1*g_3 - f_3*g_1)
@@ -795,11 +810,13 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     d_33 = 892.13
     
     params = {}
-    params.update({'rho_1':rho_1, 'rho_2':rho_2, 'rho_3':rho_3,
-                   'R_1':R_1, 'R_2':R_2, 'R_3':R_3,
+    params.update({'R_1':R_1, 'R_2':R_2, 'R_3':R_3,
                    'rho_hat_1':rho_hat_1, 
                    'rho_hat_2':rho_hat_2,
                    'rho_hat_3':rho_hat_3,
+                   'rho_1':rho_1, 'rho_2':rho_2, 'rho_3':rho_3,
+                   'f_1':f_1, 'f_3':f_3,
+                   'g_1':g_1, 'g_3':g_3,
                    'd_0':d_0, 
                    'd_11':d_11, 'd_12':d_12, 'd_13':d_13,
                    'd_21':d_21, 'd_22':d_22, 'd_23':d_23,
