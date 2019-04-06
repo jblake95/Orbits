@@ -229,7 +229,7 @@ def positionVector(phi, lst, h):
     Returns
     -------
     r : array-like
-        Position vector of observer for given time
+        Position vector of observer for given time [km]
     """
     r_x = (R_EARTH / np.sqrt(1 - (2*F - F**2)*np.sin(phi)**2) + h) \
           *np.cos(phi)*np.cos(lst)
@@ -238,9 +238,9 @@ def positionVector(phi, lst, h):
     r_z = (R_EARTH*(1 - F)**2 / np.sqrt(1 - (2*F - F**2)*np.sin(phi)**2) + h) \
           *np.sin(phi)
     
-    return np.array([r_x, r_y, r_z])
+    return np.array([r_x, r_y, r_z]) / 1000.
 
-def cosineVector(alpha, delta):
+def directionCosineVector(alpha, delta):
     """
     Direction cosine vector for an orbiting body
     
@@ -684,7 +684,16 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     obs1 = Observation(obs1, location)
     obs2 = Observation(obs2, location)
     obs3 = Observation(obs3, location)
-    print(obs1.lst)
+    
+    # obtain position and cosine vectors
+    ## First test with example in Curtis textbook
+    R_1 = positionVector(Latitude(40., u.deg).rad, 
+                         Longitude(44.506, u.deg).rad, 
+                         1000)
+    print(R_1)
+    rho_hat_1 = directionCosineVector(Longitude(43.537, u.deg).rad, 
+                                      Latitude(-8.7833, u.deg).rad)
+    print(rho_hat_1)
     input('enter.')
     
     # position and cosine vectors
