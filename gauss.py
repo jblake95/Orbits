@@ -8,7 +8,7 @@ from datetime import (
     datetime, 
     timedelta,
     )
-from scipy.optimize import newton
+from astropy.time import Time
 from astropy.table import Table
 from astropy import units as u
 from astropy.coordinates import (
@@ -17,6 +17,7 @@ from astropy.coordinates import (
     Longitude, 
     EarthLocation,
     )
+from scipy.optimize import newton
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RectangleSelector
 
@@ -96,9 +97,9 @@ def parseInput(args):
         print('No location config file found...')
         quit()
     
-    altitude = loc_tab['altitude']
-    latitude = Latitude(loc_tab['latitude'], u.deg)
-    longitude = Longitude(loc_tab['longitude'], u.deg)
+    altitude = loc_tab['altitude'][0]
+    latitude = Latitude(loc_tab['latitude'][0], u.deg)
+    longitude = Longitude(loc_tab['longitude'][0], u.deg)
     
     location = EarthLocation(lat=latitude.deg,
                              lon=longitude.deg,
@@ -114,7 +115,7 @@ class Observation:
     """
     Observation of an orbiting body at a given time
     """
-    def __init__(self, obs_tab):
+    def __init__(self, obs_tab, location):
         """
         Initiate Observation object
         """
@@ -124,6 +125,16 @@ class Observation:
         self.decerr = Latitude(obs_tab['decerr'], u.deg)
         self.utc = datetime.strptime(obs_tab['utc'], 
                                      '%Y-%m-%dT%H:%M:%S.%f')
+        self.loc = location
+        self.lst = self.getLST()
+    
+    def getLST(self):
+        """
+        Obtain the Local Sidereal Time at the epoch of the observation
+        """
+        return Time(self.utc,
+                    scale='utc',
+                    location=self.loc).sidereal_time('apparent')
 
 def selectObs(ephem_tab, n1=None, n2=None, n3=None):
     """
@@ -663,16 +674,18 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     """
     global zero
     
-    ephem, phi, h = parseInput(args) # from user input
+    ephem, location = parseInput(args) # from user input
     
     # select which observations to use
     obs1, obs2, obs3 = selectObs(ephem,
                                  n1=obs_idx[0],
                                  n2=obs_idx[1],
                                  n3=obs_idx[2])
-    obs1 = Observation(obs1)
-    obs2 = Observation(obs2)
-    obs3 = Observation(obs3)
+    obs1 = Observation(obs1, location)
+    obs2 = Observation(obs2, location)
+    obs3 = Observation(obs3, location)
+    print(obs1.lst)
+    input('enter.')
     
     # position and cosine vectors
     ## TODO: get lst from frame headers
