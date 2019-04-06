@@ -4,11 +4,19 @@ Gauss method of preliminary orbit determination
 
 import argparse as ap
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import (
+    datetime, 
+    timedelta,
+    )
 from scipy.optimize import newton
 from astropy.table import Table
 from astropy import units as u
-from astropy.coordinates import Latitude, Longitude, Angle
+from astropy.coordinates import (
+    Angle,
+    Latitude, 
+    Longitude, 
+    EarthLocation,
+    )
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RectangleSelector
 
@@ -24,26 +32,7 @@ except NameError:
     FileNotFoundError = IOError
 
 ########################################################################
-##################### Parsing observational info #######################
-########################################################################
-
-class Observation:
-    """
-    Observation of an orbiting body at a given time
-    """
-    def __init__(self, obs_tab):
-        """
-        Initiate Observation object
-        """
-        self.ra = Longitude(obs_tab['ra'], u.deg)
-        self.dec = Latitude(obs_tab['dec'], u.deg)
-        self.raerr = Longitude(obs_tab['raerr'], u.deg)
-        self.decerr = Latitude(obs_tab['decerr'], u.deg)
-        self.utc = datetime.strptime(obs_tab['utc'], 
-                                     '%Y-%m-%dT%H:%M:%S.%f')
-
-########################################################################
-########################## General functions ###########################
+######################### Parsing user input ###########################
 ########################################################################
 
 def argParse():
@@ -107,10 +96,34 @@ def parseInput(args):
         print('No location config file found...')
         quit()
     
-    latitude = Latitude(loc_tab['latitude'], u.deg)
     altitude = loc_tab['altitude']
+    latitude = Latitude(loc_tab['latitude'], u.deg)
+    longitude = Longitude(loc_tab['longitude'], u.deg)
     
-    return ephem_tab, latitude, altitude
+    location = EarthLocation(lat=latitude.deg,
+                             lon=longitude.deg,
+                             height=altitude)
+    
+    return ephem_tab, location
+
+########################################################################
+##################### Parsing observational info #######################
+########################################################################
+
+class Observation:
+    """
+    Observation of an orbiting body at a given time
+    """
+    def __init__(self, obs_tab):
+        """
+        Initiate Observation object
+        """
+        self.ra = Longitude(obs_tab['ra'], u.deg)
+        self.dec = Latitude(obs_tab['dec'], u.deg)
+        self.raerr = Longitude(obs_tab['raerr'], u.deg)
+        self.decerr = Latitude(obs_tab['decerr'], u.deg)
+        self.utc = datetime.strptime(obs_tab['utc'], 
+                                     '%Y-%m-%dT%H:%M:%S.%f')
 
 def selectObs(ephem_tab, n1=None, n2=None, n3=None):
     """
