@@ -686,13 +686,24 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     obs3 = Observation(obs3, location)
     
     # obtain position and cosine vectors
-    ## First test with example in Curtis textbook
-    R_1 = positionVector(Latitude(40., u.deg).rad, 
-                         Longitude(44.506, u.deg).rad, 
-                         1000)
+    R_1 = positionVector(obs1.loc.lat.rad,
+                         obs1.lst.rad,
+                         obs1.loc.height.value)
+    R_2 = positionVector(obs2.loc.lat.rad,
+                         obs2.lst.rad,
+                         obs2.loc.height.value)
+    R_3 = positionVector(obs3.loc.lat.rad,
+                         obs3.lst.rad,
+                         obs3.loc.height.value)
+    
+    rho_hat_1 = directionCosineVector(obs1.ra.rad,
+                                      obs1.dec.rad)
+    rho_hat_2 = directionCosineVector(obs2.ra.rad,
+                                      obs2.dec.rad)
+    rho_hat_3 = directionCosineVector(obs3.ra.rad,
+                                      obs3.dec.rad)
+    
     print(R_1)
-    rho_hat_1 = directionCosineVector(Longitude(43.537, u.deg).rad, 
-                                      Latitude(-8.7833, u.deg).rad)
     print(rho_hat_1)
     input('enter.')
     
