@@ -23,6 +23,10 @@ try:
 except NameError:
     FileNotFoundError = IOError
 
+########################################################################
+##################### Parsing observational info #######################
+########################################################################
+
 class Observation:
     """
     Observation of an orbiting body at a given time
@@ -37,6 +41,10 @@ class Observation:
         self.decerr = Latitude(obs_tab['decerr'], u.deg)
         self.utc = datetime.strptime(obs_tab['utc'], 
                                      '%Y-%m-%dT%H:%M:%S.%f')
+
+########################################################################
+########################## General functions ###########################
+########################################################################
 
 def argParse():
     """
@@ -104,6 +112,43 @@ def parseInput(args):
     
     return ephem_tab, latitude, altitude
 
+def selectObs(ephem_tab, n1=None, n2=None, n3=None):
+    """
+    Select the desired three observations to use in the analysis
+    
+    Parameters
+    ----------
+    ephem_tab : astropy Table object
+        Table of ephemeris data
+    n1, n2, n3 : int, optional
+        Indices specifying desired observations to use - if not given,
+        start-middle-end will be used
+        Default = None
+    
+    Returns
+    -------
+    obs1, obs2, obs3 : astropy Table objects
+        Three observations to take forward, updated with correct format
+    """ 
+    if n1 is None or n2 is None or n3 is None:
+        n1 = 0
+        n3 = len(ephem_tab) - 1
+        n2 = round((n3 - n1) / 2)
+    else:
+        if not n1 < n2 < n3:
+            print('Observation indices must be in ascending order...')
+            quit()
+    
+    obs1 = ephem_tab[n1]
+    obs2 = ephem_tab[n2]
+    obs3 = ephem_tab[n3]
+    
+    return obs1, obs2, obs3
+
+########################################################################
+################### Functions for widget interaction ###################
+########################################################################
+
 def toggleSelector(event):
     """
     Toggle function compatible with the RectangleSelector widget 
@@ -139,38 +184,9 @@ def onSelect(eclick, erelease):
     print('Selected: x = {}'.format(str(zero)))
     print('The button you used was: {}'.format(str(eclick.button))) 
 
-def selectObs(ephem_tab, n1=None, n2=None, n3=None):
-    """
-    Select the desired three observations to use in the analysis
-    
-    Parameters
-    ----------
-    ephem_tab : astropy Table object
-        Table of ephemeris data
-    n1, n2, n3 : int, optional
-        Indices specifying desired observations to use - if not given,
-        start-middle-end will be used
-        Default = None
-    
-    Returns
-    -------
-    obs1, obs2, obs3 : astropy Table objects
-        Three observations to take forward, updated with correct format
-    """ 
-    if n1 is None or n2 is None or n3 is None:
-        n1 = 0
-        n3 = len(ephem_tab) - 1
-        n2 = round((n3 - n1) / 2)
-    else:
-        if not n1 < n2 < n3:
-            print('Observation indices must be in ascending order...')
-            quit()
-    
-    obs1 = ephem_tab[n1]
-    obs2 = ephem_tab[n2]
-    obs3 = ephem_tab[n3]
-    
-    return obs1, obs2, obs3
+########################################################################
+################### Functions required for algorithms ##################
+########################################################################
 
 def positionVector(phi, lst, h):
     """
@@ -255,111 +271,6 @@ def poly8prime(x, a, b, c):
         Output value
     """
     return 8*x**7 + 6*a*x**5 + 3*b*x**2
-
-def orbElementsAlgorithm(r_vec, v_vec):
-    """
-    Obtain the orbital elements from the state vector
-    
-    Parameters
-    ----------
-    r_vec : array-like
-        Position vector for the orbiting body [km]
-    v_vec : array-like
-        Velocity vector for the orbiting body [km/s]
-    
-    Returns
-    -------
-    orb_elements : array-like
-        Orbital elements for the orbiting body in following order
-        a     - semimajor axis [km]
-        e     - eccentricity
-        i     - inclination [deg]
-        Omega - right ascension of the ascending node [deg]
-        omega - argument of perigee [deg]
-        theta - true anomaly [deg]
-    """
-    # step 1 - distance
-    r = np.sqrt(np.dot(r_vec, r_vec))
-    
-    # step 2 - speed
-    v = np.sqrt(np.dot(v_vec, v_vec))
-    
-    # step 3 - radial velocity
-    v_r = np.dot(v_vec, r_vec) / r
-    
-    # step 4 - specific angular momentum
-    h_vec = np.cross(r_vec, v_vec)
-    
-    # step 5 - magnitude of specific angular momentum
-    h = np.sqrt(np.dot(h_vec, h_vec))
-    
-    # step 6 - inclination [rad]
-    i = Angle(np.arccos(h_vec[2] / h), 
-              u.rad)
-    
-    # step 7 - node line vector
-    k_hat = (0, 0, 1)
-    N_vec = np.cross(k_hat, h_vec)
-    
-    # step 8 - magnitude of node line vector
-    N = np.sqrt(np.dot(N_vec, N_vec))
-    
-    # step 9 - right ascension of the ascending node [rad]
-    if N_vec[1] >= 0:
-        Omega = Angle(np.arccos(N_vec[0] / N), 
-                      u.rad)
-    else:
-        Omega = Angle(2*np.pi - np.arccos(N_vec[0] / N), 
-                      u.rad)
-    
-    # step 10 - eccentricity vector
-    e_vec = (1 / MU)*((v**2 - (MU / r))*r_vec - r*v_r*v_vec)
-    
-    # step 11 - eccentricity
-    e = np.sqrt(np.dot(e_vec, e_vec))
-    
-    # step 12 - argument of perigee
-    if e_vec[2] >= 0:
-        omega = Angle(np.arccos(np.dot(N_vec, e_vec) / (N*e)), 
-                      u.rad)
-    else:
-        omega = Angle(2*np.pi - np.arccos(np.dot(N_vec, e_vec) / (N*e)), 
-                      u.rad)
-    
-    # step 13 - true anomaly
-    if v_r >= 0:
-        theta = Angle(np.arccos(np.dot(e_vec, r_vec) / (e*r)), 
-                      u.rad)
-    else:
-        theta = Angle(2*np.pi - np.arccos(np.dot(e_vec, r_vec) / (e*r)), 
-                      u.rad)
-    
-    # additional extras - perigee & apogee radii, semimajor axis, period
-    r_p = (h**2 / MU)*(1 / (1 + e*np.cos(0.)))
-    r_a = (h**2 / MU)*(1 / (1 + e*np.cos(np.pi)))
-    
-    a = (1 / 2)*(r_p + r_a)
-    T = (2*np.pi / np.sqrt(MU))*a**(3 / 2)
-    
-    print('--------------------\n'
-          'Orbital information:\n'
-          '--------------------\n'
-          'a[km]      = {}\n'
-          'e          = {}\n'
-          'i[deg]     = {}\n'
-          'Omega[deg] = {}\n'
-          'omega[deg] = {}\n'
-          'theta[deg] = {}\n'
-          'T[hrs]     = {}\n'
-          '--------------------'.format(str(a),
-                                        str(e),
-                                        str(i.deg),
-                                        str(Omega.deg),
-                                        str(omega.deg),
-                                        str(theta.deg),
-                                        str(T / 3600.)))
-    
-    return np.array([a, e, i.deg, Omega.deg, omega.deg, theta.deg])
 
 def stumpffC(z):
     """
@@ -482,6 +393,115 @@ def round_sig(x, sig=5):
     else:
         return round(x, sig - int(np.floor(np.log10(abs(x)))) - 1)
 
+########################################################################
+############################ Algorithms ################################
+########################################################################
+
+def orbElementsAlgorithm(r_vec, v_vec):
+    """
+    Obtain the orbital elements from the state vector
+    
+    Parameters
+    ----------
+    r_vec : array-like
+        Position vector for the orbiting body [km]
+    v_vec : array-like
+        Velocity vector for the orbiting body [km/s]
+    
+    Returns
+    -------
+    orb_elements : array-like
+        Orbital elements for the orbiting body in following order
+        a     - semimajor axis [km]
+        e     - eccentricity
+        i     - inclination [deg]
+        Omega - right ascension of the ascending node [deg]
+        omega - argument of perigee [deg]
+        theta - true anomaly [deg]
+    """
+    # step 1 - distance
+    r = np.sqrt(np.dot(r_vec, r_vec))
+    
+    # step 2 - speed
+    v = np.sqrt(np.dot(v_vec, v_vec))
+    
+    # step 3 - radial velocity
+    v_r = np.dot(v_vec, r_vec) / r
+    
+    # step 4 - specific angular momentum
+    h_vec = np.cross(r_vec, v_vec)
+    
+    # step 5 - magnitude of specific angular momentum
+    h = np.sqrt(np.dot(h_vec, h_vec))
+    
+    # step 6 - inclination [rad]
+    i = Angle(np.arccos(h_vec[2] / h), 
+              u.rad)
+    
+    # step 7 - node line vector
+    k_hat = (0, 0, 1)
+    N_vec = np.cross(k_hat, h_vec)
+    
+    # step 8 - magnitude of node line vector
+    N = np.sqrt(np.dot(N_vec, N_vec))
+    
+    # step 9 - right ascension of the ascending node [rad]
+    if N_vec[1] >= 0:
+        Omega = Angle(np.arccos(N_vec[0] / N), 
+                      u.rad)
+    else:
+        Omega = Angle(2*np.pi - np.arccos(N_vec[0] / N), 
+                      u.rad)
+    
+    # step 10 - eccentricity vector
+    e_vec = (1 / MU)*((v**2 - (MU / r))*r_vec - r*v_r*v_vec)
+    
+    # step 11 - eccentricity
+    e = np.sqrt(np.dot(e_vec, e_vec))
+    
+    # step 12 - argument of perigee
+    if e_vec[2] >= 0:
+        omega = Angle(np.arccos(np.dot(N_vec, e_vec) / (N*e)), 
+                      u.rad)
+    else:
+        omega = Angle(2*np.pi - np.arccos(np.dot(N_vec, e_vec) / (N*e)), 
+                      u.rad)
+    
+    # step 13 - true anomaly
+    if v_r >= 0:
+        theta = Angle(np.arccos(np.dot(e_vec, r_vec) / (e*r)), 
+                      u.rad)
+    else:
+        theta = Angle(2*np.pi - np.arccos(np.dot(e_vec, r_vec) / (e*r)), 
+                      u.rad)
+    
+    # additional extras - perigee & apogee radii, semimajor axis, period
+    r_p = (h**2 / MU)*(1 / (1 + e*np.cos(0.)))
+    r_a = (h**2 / MU)*(1 / (1 + e*np.cos(np.pi)))
+    
+    a = (1 / 2)*(r_p + r_a)
+    T = (2*np.pi / np.sqrt(MU))*a**(3 / 2)
+    
+    print('--------------------\n'
+          'Orbital information:\n'
+          '--------------------\n'
+          'a[km]      = {}\n'
+          'e          = {}\n'
+          'i[deg]     = {}\n'
+          'Omega[deg] = {}\n'
+          'omega[deg] = {}\n'
+          'theta[deg] = {}\n'
+          'T[hrs]     = {}\n'
+          '--------------------'.format(str(a),
+                                        str(e),
+                                        str(i.deg),
+                                        str(Omega.deg),
+                                        str(omega.deg),
+                                        str(theta.deg),
+                                        str(T / 3600.)))
+    
+    return np.array([a, e, i.deg, Omega.deg, omega.deg, theta.deg])
+
 def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
     """
     Iterative improvement of the orbit determined with Gauss method
@@ -513,10 +533,6 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         theta - true anomaly [deg]
         improved using 'exact' values of the Lagrange coefficients
     """
-    print('r_vec: ', r_vec)
-    print('v_vec: ', v_vec)
-    print('tau_1: {} tau_3: {}'.format(str(tau_1),
-                                       str(tau_3)))
     i = 0
     f_1_list = [p['f_1']]
     f_3_list = [p['f_3']]
@@ -529,14 +545,13 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         # step 1 - distance and speed
         r = np.sqrt(np.dot(r_vec, r_vec))
         v = np.sqrt(np.dot(v_vec, v_vec))
-        print('r: {} v: {}'.format(str(r),
-                                   str(v)))
+        
         # step 2 - reciprocal of semimajor axis
         alpha = 2 / r - v**2 / MU
-        print('alpha: {}'.format(str(alpha)))
+        
         # step 3 - radial component of v_vec
         v_r = np.dot(v_vec, r_vec) / r
-        print('v_r: {}'.format(str(v_r)))
+        
         # step 4 - solve universal Kepler's equation for chi_i
         chi_1 = solveUniversalKepler(tau_1, 
                                      r, 
@@ -548,21 +563,15 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
                                      v_r, 
                                      alpha,
                                      tolerance=tolerance)
-        print('chi_1: {} chi_3: {}'.format(str(chi_1),
-                                           str(chi_3)))
+        
         # step 5 - use chi_i to determine new Lagrange coefficients
         z_1 = alpha*chi_1**2
         z_3 = alpha*chi_3**2
-        print('z_1: {} z_3: {}'.format(str(z_1),
-                                       str(z_3)))
+        
         f_1 = 1 - (chi_1**2 / r)*stumpffC(z_1)
         g_1 = tau_1 - (1 / np.sqrt(MU))*chi_1**3*stumpffS(z_1)
         f_3 = 1 - (chi_3**2 / r)*stumpffC(z_3)
         g_3 = tau_3 - (1 / np.sqrt(MU))*chi_3**3*stumpffS(z_3)
-        print('f_1: {} f_3: {}'.format(str(f_1),
-                                       str(f_3)))
-        print('g_1: {} g_3: {}'.format(str(g_1),
-                                       str(g_3)))
         
         f_1_list.append(f_1)
         f_3_list.append(f_3)
@@ -577,8 +586,7 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         # step 6 - determine c_i
         c_1 = g_3 / (f_1*g_3 - f_3*g_1)
         c_3 = -g_1 / (f_1*g_3 - f_3*g_1)
-        print('c_1: {} c_3: {}'.format(str(c_1),
-                                       str(c_3)))
+        
         # step 7 - update values of rho_i
         rho_1 = (1 / p['d_0'])*(-p['d_11'] + (1 / c_1)*p['d_21'] -
                                 (c_3 / c_1)*p['d_31'])
@@ -586,9 +594,7 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
                                 c_3*p['d_32'])
         rho_3 = (1 / p['d_0'])*(-(c_1 / c_3)*p['d_13'] + 
                                 (1 / c_3)*p['d_23'] - p['d_33'])
-        print('rho_1: {} rho_2: {} rho_3: {}'.format(str(rho_1),
-                                                     str(rho_2),
-                                                     str(rho_3)))
+        
         rho_1_list.append(round_sig(rho_1, sig=sig))
         rho_2_list.append(round_sig(rho_2, sig=sig))
         rho_3_list.append(round_sig(rho_3, sig=sig))
@@ -597,12 +603,10 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         r_1 = p['R_1'] + rho_1*p['rho_hat_1']
         r_2 = p['R_2'] + rho_2*p['rho_hat_2']
         r_3 = p['R_3'] + rho_3*p['rho_hat_3']
-        print('r_1: ', r_1)
-        print('r_2: ', r_2)
-        print('r_3: ', r_3)
+        
         # step 9 - update velocity vector v
         v_2 = (1 / (f_1*g_3 - f_3*g_1))*(-f_3*r_1 + f_1*r_3)
-        print('v_2: ', v_2)
+        
         # step 10 - check if rho_i are the 'same' to within sig figs
         if (rho_1_list[i] == rho_1_list[i-1] and 
             rho_2_list[i] == rho_2_list[i-1] and
@@ -614,16 +618,11 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         else:
             r_vec, v_vec = r_2, v_2 # update state vector and repeat
         
-        """
-        print('Step {}: {} {} {}'.format(str(i + 1),
-                                         str(rho_1),
-                                         str(rho_2),
-                                         str(rho_3)))
-        """
-        print('r_vec: ', r_vec)
-        print('v_vec: ', v_vec)
+        print('Iteration {}: {} {} {}'.format(str(i + 1),
+                                              str(rho_1),
+                                              str(rho_2),
+                                              str(rho_3)), end="\r")
         i += 1
-        input('enter.')
     
     orb_elements = 0 # dummy 
     return orb_elements
