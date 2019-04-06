@@ -672,9 +672,10 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     vel_vec : array-like
         Velocity vectors for the three observations
     """
-    global zero
+    global zero # for widget functionality
     
-    ephem, location = parseInput(args) # from user input
+    # obtain observational info
+    ephem, location = parseInput(args)
     
     # select which observations to use
     obs1, obs2, obs3 = selectObs(ephem,
@@ -685,7 +686,7 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     obs2 = Observation(obs2, location)
     obs3 = Observation(obs3, location)
     
-    # obtain position and cosine vectors
+    # obtain position and direction cosine vectors
     R_1 = positionVector(obs1.loc.lat.rad,
                          obs1.lst.rad,
                          obs1.loc.height.value)
@@ -703,22 +704,14 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     rho_hat_3 = directionCosineVector(obs3.ra.rad,
                                       obs3.dec.rad)
     
-    print(R_1)
-    print(rho_hat_1)
+    # step 1 - time intervals
+    tau_1 = (obs1.utc - obs2.utc).total_seconds()
+    tau_3 = (obs3.utc - obs2.utc).total_seconds()
+    tau = tau_3 - tau_1
+    
+    print(tau_1, tau_3, tau)
     input('enter.')
     
-    # position and cosine vectors
-    ## TODO: get lst from frame headers
-    ## for now use example from Curtis textbook, algorithm 5.5
-    R_1 = np.array([3489.8, 3430.2, 4078.5])
-    R_2 = np.array([3460.1, 3460.1, 4078.5])
-    R_3 = np.array([3429.9, 3490.1, 4078.5])
-    
-    rho_hat_1 = np.array([0.71643, 0.68074, -0.15270])
-    rho_hat_2 = np.array([0.56897, 0.79531, -0.20917])
-    rho_hat_3 = np.array([0.41841, 0.87007, -0.26059])
-    
-    # step 1 - time intervals
     tau_1 = -118.10
     tau_3 = 119.47
     tau = 237.58
