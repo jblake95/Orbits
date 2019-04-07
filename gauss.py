@@ -59,8 +59,8 @@ def argParse():
                         help='path to location config file',
                         type=str)
     
-    parser.add_argument('--diagnostics',
-                        help='include sanity checks?',
+    parser.add_argument('--improve',
+                        help='carry out orbit improvement algorithm?',
                         action='store_true')
     
     return parser.parse_args()
@@ -642,16 +642,17 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         else:
             r_vec, v_vec = r_2, v_2 # update state vector and repeat
         
-        print('Iteration {}: {} {} {}'.format(str(i + 1),
-                                              str(rho_1),
-                                              str(rho_2),
-                                              str(rho_3)), end="\r")
+        print('Iteration {}: {} {} {}\n'.format(str(i + 1),
+                                                str(rho_1),
+                                                str(rho_2),
+                                                str(rho_3)), end="\r")
         i += 1
     
-    orb_elements = 0 # dummy 
+    orb_elements = orbElementsAlgorithm(r_vec, v_vec)
+    
     return orb_elements
 
-def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
+def gaussAlgorithm(args, obs_idx=[None, None, None]):
     """
     Carry out the Gauss method of preliminary orbit determination
     
@@ -663,9 +664,6 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
         Indices corresponding to observations to feed into algorithm
         (format: [n1, n2, n3] where ni specifies index i)
         default = None, will automatically select start-middle-end
-    improve : bool, optional
-        Toggle to perform iterative improvement of the determined orbit
-        default = False
     
     Returns
     -------
@@ -708,13 +706,6 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     tau_1 = (obs1.utc - obs2.utc).total_seconds()
     tau_3 = (obs3.utc - obs2.utc).total_seconds()
     tau = tau_3 - tau_1
-    
-    print(tau_1, tau_3, tau)
-    input('enter.')
-    
-    tau_1 = -118.10
-    tau_3 = 119.47
-    tau = 237.58
     
     # step 2 - rho_hat cross products
     p_1 = np.cross(rho_hat_2, rho_hat_3)
@@ -821,45 +812,24 @@ def gaussAlgorithm(args, obs_idx=[None, None, None], improve=False):
     # step 13 - orbital elements
     orb_elements = orbElementsAlgorithm(r_2, v_2)
     
-    # Improve the state vector 
-    ## Using example from Curtis textbook Chapter 5.10
-    r_2 = np.array([5659.1, 6533.8, 3270.1])
-    v_2 = np.array([-3.880, 5.1156, -2.2387])
-    tau_1 = -118.10
-    tau_3 = 119.47
-    rho_1 = 3639.1
-    rho_2 = 3864.8
-    rho_3 = 4172.8
-    R_1 = np.array([3489.8, 3430.2, 4078.5])
-    R_2 = np.array([3460.1, 3460.1, 4078.5])
-    R_3 = np.array([3429.9, 3490.1, 4078.5])
-    rho_hat_1 = np.array([0.71643, 0.68074, -0.15270])
-    rho_hat_2 = np.array([0.56897, 0.79531, -0.20917])
-    rho_hat_3 = np.array([0.41841, 0.87007, -0.26059])
-    d_0 = -0.0015198
-    d_11 = 782.15
-    d_12 = 1646.5
-    d_13 = 887.10
-    d_21 = 784.72
-    d_22 = 1651.5
-    d_23 = 889.60
-    d_31 = 787.31
-    d_32 = 1656.6
-    d_33 = 892.13
-    
-    params = {}
-    params.update({'R_1':R_1, 'R_2':R_2, 'R_3':R_3,
-                   'rho_hat_1':rho_hat_1, 
-                   'rho_hat_2':rho_hat_2,
-                   'rho_hat_3':rho_hat_3,
-                   'rho_1':rho_1, 'rho_2':rho_2, 'rho_3':rho_3,
-                   'f_1':f_1, 'f_3':f_3,
-                   'g_1':g_1, 'g_3':g_3,
-                   'd_0':d_0, 
-                   'd_11':d_11, 'd_12':d_12, 'd_13':d_13,
-                   'd_21':d_21, 'd_22':d_22, 'd_23':d_23,
-                   'd_31':d_31, 'd_32':d_32, 'd_33':d_33})
-    _ = improveOrbit(r_2, v_2, tau_1, tau_3, params)
+    # Improve the state vector if requested
+    if args.improve:
+        params = {'R_1': R_1, 'R_2': R_2, 'R_3': R_3,
+                  'rho_hat_1': rho_hat_1, 
+                  'rho_hat_2': rho_hat_2,
+                  'rho_hat_3': rho_hat_3,
+                  'rho_1': rho_1, 'rho_2': rho_2, 'rho_3': rho_3,
+                  'f_1': f_1, 'f_3': f_3,
+                  'g_1': g_1, 'g_3': g_3,
+                  'd_0': d_0, 
+                  'd_11': d_11, 'd_12': d_12, 'd_13': d_13,
+                  'd_21': d_21, 'd_22': d_22, 'd_23': d_23,
+                  'd_31': d_31, 'd_32': d_32, 'd_33': d_33}
+        orb_elements = improveOrbit(r_2,
+                                    v_2,
+                                    tau_1,
+                                    tau_3,
+                                    params)
     
     return orb_elements
 
