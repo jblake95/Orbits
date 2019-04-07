@@ -79,12 +79,28 @@ def propagateTLE(tle, epoch):
 
 def lnprior(theta):
 	"""
+	Log prior function - used to ensure walkers are exploring the range 
+	defined by the priors
+	
+	Parameters
+	----------
+	theta : array-like
+	    current set of parameters from MCMC
+	
+	lnprior : float
+        log prior of current sample (0.0 | -np.inf)
 	"""
+	
+	
 	return lnprior
 
-def lnlike():
+def lnlike(theta, t, ra, raerr, dec, decerr):
 	"""
+	Log likelihood for a given subset of data
 	"""
+	
+	##TODO: Will need to split process into ra over time and dec over
+	##      time by the looks of it, then recombine here
 	
 	return lnlike
 
