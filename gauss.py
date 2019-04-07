@@ -59,6 +59,21 @@ def argParse():
                         help='path to location config file',
                         type=str)
     
+    parser.add_argument('--n1',
+                        help='index of first observation - '
+                             'default: start-middle-end',
+                        type=int)
+    
+    parser.add_argument('--n2',
+                        help='index of second observation - '
+                             'default: start-middle-end',
+                        type=int)
+    
+    parser.add_argument('--n3',
+                        help='index of third observation - '
+                             'default: start-middle-end',
+                        type=int)
+    
     parser.add_argument('--improve',
                         help='carry out orbit improvement algorithm?',
                         action='store_true')
@@ -557,6 +572,7 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         theta - true anomaly [deg]
         improved using 'exact' values of the Lagrange coefficients
     """
+    print('Carrying out iterative improvement of orbital elements...')
     i = 0
     f_1_list = [p['f_1']]
     f_3_list = [p['f_3']]
@@ -642,17 +658,14 @@ def improveOrbit(r_vec, v_vec, tau_1, tau_3, p, tolerance=1e-6, sig=5):
         else:
             r_vec, v_vec = r_2, v_2 # update state vector and repeat
         
-        print('Iteration {}: {} {} {}\n'.format(str(i + 1),
-                                                str(rho_1),
-                                                str(rho_2),
-                                                str(rho_3)), end="\r")
         i += 1
     
+    print('Number of iterations: {}'.format(str(i)))
     orb_elements = orbElementsAlgorithm(r_vec, v_vec)
     
     return orb_elements
 
-def gaussAlgorithm(args, obs_idx=[None, None, None]):
+def gaussAlgorithm(args):
     """
     Carry out the Gauss method of preliminary orbit determination
     
@@ -676,10 +689,16 @@ def gaussAlgorithm(args, obs_idx=[None, None, None]):
     ephem, location = parseInput(args)
     
     # select which observations to use
+    if args.n1 and args.n2 and args.n3:
+        n1, n2, n3 = args.n1, args.n2, args.n3
+    else:
+        print('No obs ids specified. Using start-middle-end...')
+        n1, n2, n3 = None, None, None
+    
     obs1, obs2, obs3 = selectObs(ephem,
-                                 n1=obs_idx[0],
-                                 n2=obs_idx[1],
-                                 n3=obs_idx[2])
+                                 n1=n1,
+                                 n2=n2,
+                                 n3=n3)
     obs1 = Observation(obs1, location)
     obs2 = Observation(obs2, location)
     obs3 = Observation(obs3, location)
