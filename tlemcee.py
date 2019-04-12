@@ -54,7 +54,33 @@ def argParse():
                         help='path to file containing ephemeris info',
                         type=str)
     
+    parser.add_argument('config_path',
+                        help='path to file containing config info',
+                        type=str)
+    
     return parser.parse_args()
+
+def readConfig(config_path):
+	"""
+	Extract info from config file
+	
+	Parameters
+	----------
+	config_path : str
+	    Path to file containing config info
+	
+	Returns
+	-------
+	config : astropy Table object
+	    Table containing config info
+	"""
+	try:
+		config = Table.read(config_path, format='csv')
+	except FileNotFoundError:
+		print('Config file not found...')
+		quit()
+	
+	return config
 
 def formTLE(year, yday, mmdot, mmdot2, incl, raan, ):
 	"""
