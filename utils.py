@@ -62,10 +62,14 @@ def tle_standard_form(number):
 		mantissa_sign = '+'
 	else:
 		mantissa_sign = '-'
-	mantissa_str = '{:.5f}'.format(mantissa / 10.).lstrip('+-0.')
+	mantissa_str = '{:.5f}'.format(mantissa / 10.).lstrip('+-0')
+	mantissa_str = mantissa_str.lstrip('.')
 	
-	exponent = int(sci_not[e_pos+1:]) + 1
-	if exponent >= 0:
+	if mantissa != 0.:
+		exponent = int(sci_not[e_pos+1:]) + 1
+	else:
+		exponent = 0
+	if exponent > 0:
 		exponent_sign = '+'
 	else:
 		exponent_sign = '-'
