@@ -3,6 +3,21 @@ Convenience classes for manipulation of TLE parameters
 
 A note on default values:
 -------------------------
+Each parameter class has an in-built default
+Norad_id     - 0 (next field set to Unclassified 'U' by default)
+Launch       - empty (Intl designator requires all three components)
+Epoch        - 01/01/2000 (WARNING: TLEs quickly deteriorate)
+Mmdot        - 0 (not used by SGP4/SDP4, only SGP)
+Mmdot2       - 0 (not used by SGP4/SDP4, only SGP)
+Drag         - 0 (ballistic coefficient adjusted for atm. density)
+Housekeeping - 0 (element set number and revolution number)
+Checksum     - 0 (modulo-10 checksum summing all numbers with '-'=1)
+Inclination  - 0
+RAAN         - 0
+Eccentricity - 0
+ArgPerigee   - 0
+MeanAnomaly  - 0
+Mm           - 0
 """
 
 from utils import (
