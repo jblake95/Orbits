@@ -1,0 +1,5 @@
+*DS_Store
+*.dat
+*.data
+*.preds
+*__pycache__/
